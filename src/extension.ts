@@ -2,6 +2,12 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
+// Test imports for semantic search dependencies
+// Note: Runtime execution may fail due to native bindings, but TypeScript compilation should work
+// import Database from 'sqlite3';
+// import { AutoTokenizer } from '@xenova/transformers';
+// import * as faiss from 'faiss-node';
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {

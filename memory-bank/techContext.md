@@ -14,6 +14,7 @@
 - **FAISS**: Vector similarity search and indexing
 - **SQLite**: Metadata storage and caching
 - **Cosine Similarity**: Vector comparison algorithm
+- **@xenova/transformers**: Llama-compatible tokenization (optimized for our Nvidia model)
 
 ### Development Environment
 - **VS Code**: Development IDE
@@ -47,14 +48,15 @@ code --version  # VS Code 1.74.0 or higher
     "vscode": "^1.74.0",
     "faiss-node": "^0.5.0",
     "sqlite3": "^5.1.0",
-    "crypto": "^1.0.1"
+    "@xenova/transformers": "^2.17.2"
   },
   "devDependencies": {
     "@types/vscode": "^1.74.0",
     "typescript": "^4.9.0",
     "jest": "^29.0.0",
     "@types/jest": "^29.0.0",
-    "eslint": "^8.0.0"
+    "eslint": "^8.0.0",
+    "prettier": "^3.6.0"
   }
 }
 ```
@@ -81,11 +83,21 @@ code --version  # VS Code 1.74.0 or higher
 
 ## Architecture Decisions
 
+### **🔧 Tokenization Strategy** (Updated 2025-07-15)
+**Decision**: Use @xenova/transformers for Llama-compatible tokenization
+- **Previous**: tiktoken (designed for OpenAI models)
+- **Current**: @xenova/transformers (supports Nvidia llama-3.2-nv-embedqa-1b-v2)
+- **Benefits**: 
+  - Proper tokenization alignment with our embedding model
+  - Accurate 500-token chunk boundaries
+  - Better embedding quality
+  - Model-specific tokenizer support
+
 ### Embedding Strategy
 **Decision**: Local-first approach with Nvidia models
 - **Primary**: Nvidia llama-3.2-nv-embedqa-1b-v2 (local)
 - **Benefits**: No API costs, full privacy, offline capability
-- **Future**: HuggingFace transformers.js for browser support
+- **Tokenization**: @xenova/transformers for accurate token counting
 
 ### Storage Strategy
 **Decision**: Local-first with cloud backup option
