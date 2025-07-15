@@ -3,10 +3,20 @@
 ## Phase 1: Basic Functionality (Weeks 1-3)
 
 ### 🔧 Foundation Setup
-- [ ] **Task 1**: Create VSCode extension scaffold using `yo code`
-- [ ] **Task 2**: Set up TypeScript development environment and dependencies
-- [ ] **Task 3**: Configure build system and testing framework (Jest)
-- [ ] **Task 4**: Implement basic command registration in command palette
+- [ ] **ID 1: Create VSCode extension scaffold using yo code** (Priority: critical)
+> Set up the basic VSCode extension structure using the official Yeoman generator, creating the foundation for the CppSeek semantic search extension.
+
+- [ ] **ID 2: Set up TypeScript development environment and dependencies** (Priority: critical)  
+> Dependencies: 1
+> Configure TypeScript compilation, install required npm packages, and set up the development build system for the extension.
+
+- [ ] **ID 3: Configure build system and testing framework (Jest)** (Priority: high)
+> Dependencies: 2
+> Set up Jest testing framework, configure build scripts, and establish development workflow with proper linting and code quality tools.
+
+- [ ] **ID 4: Implement basic command registration in command palette** (Priority: high)
+> Dependencies: 3
+> Register the core CppSeek commands in VSCode command palette and verify the extension activation and command execution works correctly.
 
 ### 📁 Code Processing Pipeline
 - [ ] **Task 5**: Implement workspace file discovery for `.cpp/.h` files

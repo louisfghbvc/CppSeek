@@ -1,9 +1,49 @@
-# Task 1: Create VSCode Extension Scaffold
-
-## Status: PENDING
+---
+id: 1
+title: 'Create VSCode extension scaffold using yo code'
+status: pending
+priority: critical
+feature: Foundation Setup
+dependencies: []
+assigned_agent: null
+created_at: "2025-07-15T06:43:21Z"
+started_at: null
+completed_at: null
+error_log: null
+---
 
 ## Description
-Set up the basic VSCode extension structure using the official Yeoman generator (`yo code`). This will create the foundation for the CppSeek semantic search extension.
+
+Set up the basic VSCode extension structure using the official Yeoman generator (`yo code`). This will create the foundation for the CppSeek semantic search extension with proper TypeScript configuration and VSCode extension manifest.
+
+## Details
+
+- Install Yeoman generator for VSCode extensions (`npm install -g yo generator-code`)
+- Run `yo code` and select TypeScript extension template
+- Configure extension metadata in package.json:
+  - **Extension ID**: `cppseek-semantic-search`
+  - **Display Name**: `CppSeek - Semantic Search`
+  - **Description**: `AI-powered semantic search for C/C++ codebases`
+  - **Categories**: `Other, Programming Languages`
+  - **Activation Events**: `onLanguage:cpp, onLanguage:c`
+- Verify the generated directory structure includes:
+  - `src/extension.ts` (main entry point)
+  - `package.json` (extension manifest)
+  - `tsconfig.json` (TypeScript configuration)
+  - `webpack.config.js` (build configuration)
+- Configure basic command registration placeholder in package.json
+- Ensure extension can be loaded in VSCode development environment
+- Set up proper TypeScript compilation settings for VSCode extension development
+
+## Test Strategy
+
+- Run `npm install` in the generated project directory
+- Open the project in VSCode
+- Press F5 to launch Extension Development Host
+- Verify extension appears in Extensions view
+- Check that no compilation errors occur
+- Verify basic extension activation works without errors
+- Confirm the extension can be packaged using `vsce package`
 
 ## Context
 This is the first task in Phase 1 of the CppSeek project. We need to establish the basic extension structure that will serve as the foundation for all subsequent development.
