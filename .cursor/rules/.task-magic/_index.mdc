@@ -1,0 +1,40 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Task Magic System Overview
+
+Whenever you use this rule, start your message with the following:
+
+"Accessing Task Magic system overview..."
+
+The Task Magic system is a file-based project management and AI agent operational framework designed to plan features, manage development tasks, and maintain a memory of past work. It integrates seamlessly with the Memory Bank system to provide persistent context across AI agent sessions.
+
+The system consists of three main components, each governed by its own detailed rule file, plus Memory Bank integration:
+
+1.  **Plans (`@plans.mdc`)**:
+    *   **Purpose**: Defines how Product Requirements Documents (PRDs) are created and structured for the overall project and specific features.
+    *   **Location**: PRDs are stored in `.cursor/.ai/plans/`, with feature-specific plans in `.cursor/.ai/plans/features/`.
+    *   **Key File**: A global `PLAN.md` is mandatory in `.cursor/.ai/plans/`.
+    *   **Details**: For plan creation, fully review [task-magic/plans.mdc](mdc:.cursor/rules/task-magic/plans.mdc)
+
+2.  **Tasks (`@tasks.mdc`)**:
+    *   **Purpose**: Governs the creation, management, and lifecycle of individual development tasks.
+    *   **Active Tasks**: All active tasks reside in `.cursor/.ai/tasks/` as `task{id}_name.md` files.
+    *   **Master View**: A master checklist, `.cursor/.ai/TASKS.md`, mirrors the status of tasks in the `.cursor/.ai/tasks/` directory and must be kept synchronized.
+    *   **Details**: For task creation, fully review [task-magic/tasks.mdc](mdc:.cursor/rules/task-magic/tasks.mdc)
+
+3.  **Memory (`@memory.mdc`)**:
+    *   **Purpose**: Archives completed and failed tasks to provide historical context.
+    *   **Location**: Archived task files are stored in `.cursor/.ai/memory/tasks/`.
+    *   **Log File**: A chronological log of archived tasks is maintained in `.cursor/.ai/memory/TASKS_LOG.md`.
+    *   **Details**: For storing to memory, full review [task-magic/memory.mdc](mdc:.cursor/rules/task-magic/memory.mdc)
+
+4.  **Memory Bank Integration (`@memory-bank/_index.mdc`)**:
+    *   **Purpose**: Provides persistent context across AI agent sessions and integrates with Task Magic.
+    *   **Location**: Memory Bank files stored in `memory-bank/` directory.
+    *   **Integration**: Seamless synchronization between persistent context and operational history.
+    *   **Details**: For Memory Bank operations, review [memory-bank/_index.mdc](mdc:.cursor/rules/memory-bank/_index.mdc) and its modular components
+
+This interconnected system allows for structured project development with persistent memory, from high-level planning to task execution, historical review, and continuous learning across AI agent sessions.
