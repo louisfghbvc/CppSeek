@@ -19,7 +19,8 @@
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
 		"declaration": true,
-		"declarationMap": true
+		"declarationMap": true,
+		"isolatedModules": true
 	},
 	"include": [
 		"src/**/*"
