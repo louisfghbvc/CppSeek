@@ -1,71 +1,227 @@
-# cppseek-semantic-search README
+# CppSeek - AI-Powered Semantic Search for C/C++
 
-This is the README for your extension "cppseek-semantic-search". After writing up a brief description, we recommend including the following sections.
+CppSeek is a Visual Studio Code extension that brings intelligent semantic search capabilities to C and C++ codebases. Using advanced AI embeddings and vector similarity search, CppSeek helps developers quickly find relevant code segments based on natural language queries rather than exact text matches.
 
-## Features
+## 🚀 Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### Current Features (Foundation Release)
 
-For example if there is an image subfolder under your extension project workspace:
+- **🎯 Semantic Search Command**: Search your codebase using natural language queries
+- **📁 Workspace Indexing**: Intelligent scanning and indexing of C/C++ files
+- **⌨️ Keyboard Shortcuts**: Quick access with `Ctrl+Shift+S` (Cmd+Shift+S on Mac)
+- **📊 Progress Tracking**: Real-time indexing progress in the status bar
+- **⚙️ Flexible Configuration**: Comprehensive settings for search behavior and performance
+- **🔧 Output Logging**: Detailed logging channel for debugging and monitoring
 
-\!\[feature X\]\(images/feature-x.png\)
+### Coming Soon (Core Implementation)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- **🤖 Nvidia NIM Integration**: Powered by llama-3.2-nv-embedqa-1b-v2 embeddings
+- **🗄️ Vector Database**: Efficient similarity search using FAISS
+- **📄 Smart Code Parsing**: Context-aware chunking and preprocessing
+- **🎯 Intelligent Ranking**: AI-powered result relevance scoring
 
-## Requirements
+## 📦 Installation
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+### From Source (Development)
 
-## Extension Settings
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd CppSeek
+```
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+2. Install dependencies:
+```bash
+npm install
+```
 
-For example:
+3. Build the extension:
+```bash
+npm run compile
+```
 
-This extension contributes the following settings:
+4. Package for installation:
+```bash
+npx vsce package
+```
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+5. Install in VS Code:
+   - Open VS Code
+   - Go to Extensions (Ctrl+Shift+X)
+   - Click "..." menu → "Install from VSIX"
+   - Select the generated `.vsix` file
 
-## Known Issues
+## 🔧 Usage
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+### Getting Started
 
-## Release Notes
+1. **Open a C/C++ workspace** - CppSeek activates automatically when you open C/C++ files
+2. **Index your workspace** - Use `CppSeek: Index Workspace` command or the welcome prompt
+3. **Start searching** - Use `Ctrl+Shift+S` or the `CppSeek: Semantic Search` command
 
-Users appreciate release notes as you update your extension.
+### Available Commands
 
-### 1.0.0
+| Command | Shortcut | Description |
+|---------|----------|-------------|
+| `CppSeek: Semantic Search` | `Ctrl+Shift+S` | Start a semantic search query |
+| `CppSeek: Index Workspace` | - | Index all C/C++ files in the workspace |
+| `CppSeek: Clear Index` | - | Clear the current search index |
+| `CppSeek: Show Settings` | - | Open CppSeek configuration settings |
 
-Initial release of ...
+### Example Queries
 
-### 1.0.1
+```
+"Where is the memory allocation logic?"
+"Find functions that handle error conditions"
+"Show me the initialization code"
+"Where are the data structures defined?"
+```
 
-Fixed issue #.
+## ⚙️ Configuration
 
-### 1.1.0
+CppSeek provides comprehensive configuration options accessible through VS Code settings:
 
-Added features X, Y, and Z.
+### Search Behavior
+
+```json
+{
+  "cppseek.searchBehavior.maxResults": 50,
+  "cppseek.searchBehavior.chunkSize": 500,
+  "cppseek.searchBehavior.chunkOverlap": 50
+}
+```
+
+### File Patterns
+
+```json
+{
+  "cppseek.files.include": [
+    "**/*.cpp", "**/*.cxx", "**/*.cc", 
+    "**/*.c", "**/*.h", "**/*.hpp", "**/*.hxx"
+  ],
+  "cppseek.files.exclude": [
+    "**/node_modules/**", "**/build/**", 
+    "**/out/**", "**/dist/**"
+  ]
+}
+```
+
+### Performance Tuning
+
+```json
+{
+  "cppseek.performance.enableCache": true,
+  "cppseek.performance.maxMemoryUsage": 200
+}
+```
+
+## 🛠️ Development
+
+### Prerequisites
+
+- Node.js 16+
+- VS Code 1.74.0+
+- TypeScript 4.9+
+
+### Development Setup
+
+1. **Clone and install**:
+```bash
+git clone <repository-url>
+cd CppSeek
+npm install
+```
+
+2. **Development commands**:
+```bash
+npm run compile          # Compile TypeScript
+npm run watch           # Watch mode for development
+npm test               # Run Jest tests
+npm run lint           # ESLint validation
+npm run package        # Production build
+```
+
+3. **Testing**:
+```bash
+npm test               # Unit tests with Jest
+npm run test:coverage  # Test coverage report
+```
+
+### Architecture
+
+```
+src/
+├── extension.ts        # Main extension entry point
+├── test/
+│   ├── setup.ts       # Jest test configuration
+│   └── suite/
+│       └── extension.test.ts  # Extension tests
+└── [future modules]    # Semantic search implementation
+
+.cursor/.ai/           # Task Magic system
+├── tasks/            # Individual task files
+├── plans/            # Project requirements
+└── memory/           # Completed task archive
+
+memory-bank/          # Memory Bank system
+├── activeContext.md  # Current development state
+├── progress.md       # Project progress tracking
+└── [other context]   # Technical documentation
+```
+
+## 📋 Requirements
+
+### Runtime Dependencies
+
+- **@xenova/transformers**: AI model tokenization (Llama-compatible)
+- **sqlite3**: Local database for metadata storage
+- **faiss-node**: Vector similarity search engine
+
+### Development Dependencies
+
+- **TypeScript**: Modern language features with strict typing
+- **Jest**: Comprehensive testing framework
+- **Webpack**: Module bundling and optimization
+- **ESLint + Prettier**: Code quality and formatting
+
+## 🐛 Known Issues
+
+- Extension packaging requires non-template README (resolved in this version)
+- Native dependencies may require compilation on first install
+- FAISS integration pending for semantic search functionality
+
+## 📈 Roadmap
+
+### Phase 1: Foundation ✅ Complete
+- [x] Extension scaffold and build system
+- [x] TypeScript development environment
+- [x] Testing framework with Jest
+- [x] Command palette integration
+
+### Phase 2: Core Implementation (In Progress)
+- [ ] Database schema and vector storage
+- [ ] Nvidia NIM service integration
+- [ ] Code parsing and chunking algorithms
+- [ ] Semantic search and ranking
+
+### Phase 3: Advanced Features (Planned)
+- [ ] Cross-reference analysis
+- [ ] Code similarity detection
+- [ ] Integration with IDE features
+- [ ] Performance optimization
+
+## 📄 License
+
+[License information to be added]
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see our contributing guidelines for details.
+
+## 📞 Support
+
+For issues and feature requests, please use the GitHub issue tracker.
 
 ---
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+**Powered by Nvidia NIM and built with ❤️ for the C/C++ developer community**

@@ -12,16 +12,95 @@
   ],
   "activationEvents": [
     "onLanguage:cpp",
-    "onLanguage:c"
+    "onLanguage:c",
+    "onCommand:cppseek.semanticSearch"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "cppseek-semantic-search.helloWorld",
-        "title": "Hello World"
+        "command": "cppseek.semanticSearch",
+        "title": "CppSeek: Semantic Search",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.indexWorkspace",
+        "title": "CppSeek: Index Workspace",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.clearIndex",
+        "title": "CppSeek: Clear Index",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.showSettings",
+        "title": "CppSeek: Show Settings",
+        "category": "CppSeek"
       }
-    ]
+    ],
+    "keybindings": [
+      {
+        "command": "cppseek.semanticSearch",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s",
+        "when": "editorTextFocus && (editorLangId == cpp || editorLangId == c)"
+      }
+    ],
+    "configuration": {
+      "title": "CppSeek",
+      "properties": {
+        "cppseek.searchBehavior.maxResults": {
+          "type": "number",
+          "default": 50,
+          "description": "Maximum number of search results to display",
+          "minimum": 10,
+          "maximum": 200
+        },
+        "cppseek.searchBehavior.chunkSize": {
+          "type": "number",
+          "default": 500,
+          "description": "Size of text chunks for indexing (in tokens)",
+          "minimum": 100,
+          "maximum": 1000
+        },
+        "cppseek.searchBehavior.chunkOverlap": {
+          "type": "number",
+          "default": 50,
+          "description": "Overlap between adjacent chunks (in tokens)",
+          "minimum": 0,
+          "maximum": 200
+        },
+        "cppseek.files.include": {
+          "type": "array",
+          "default": ["**/*.cpp", "**/*.cxx", "**/*.cc", "**/*.c", "**/*.h", "**/*.hpp", "**/*.hxx"],
+          "description": "File patterns to include in indexing",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cppseek.files.exclude": {
+          "type": "array",
+          "default": ["**/node_modules/**", "**/build/**", "**/out/**", "**/dist/**"],
+          "description": "File patterns to exclude from indexing",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cppseek.performance.enableCache": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable caching for better performance"
+        },
+        "cppseek.performance.maxMemoryUsage": {
+          "type": "number",
+          "default": 200,
+          "description": "Maximum memory usage for indexing (in MB)",
+          "minimum": 50,
+          "maximum": 1000
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
