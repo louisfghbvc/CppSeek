@@ -19,10 +19,21 @@
 > Register the core CppSeek commands in VSCode command palette and verify the extension activation and command execution works correctly.
 
 ### 📁 Code Processing Pipeline
-- [ ] **Task 5**: Implement workspace file discovery for `.cpp/.h` files
-- [ ] **Task 6**: Create fixed-size text chunking logic (500 tokens with overlap)
-- [ ] **Task 7**: Implement file content reading and text processing
-- [ ] **Task 8**: Set up chunk overlap logic for context continuity
+- [ ] **ID 5: Implement workspace file discovery for .cpp/.h files** (Priority: critical)
+> Dependencies: 4
+> Implement recursive file system scanning to discover all C/C++ source files (.cpp, .cc, .cxx) and header files (.h, .hpp, .hxx) within the VSCode workspace, with configurable file patterns and exclusion rules.
+
+- [ ] **ID 6: Create fixed-size text chunking logic (500 tokens with overlap)** (Priority: critical) 
+> Dependencies: 5
+> Implement text chunking algorithm that splits file content into fixed-size chunks of 500 tokens using @xenova/transformers for Llama-compatible tokenization, with configurable overlap between chunks for context continuity.
+
+- [ ] **ID 7: Implement file content reading and text processing** (Priority: high)
+> Dependencies: 5
+> Implement robust file reading system with encoding detection, preprocessing steps (comment handling, whitespace normalization), and error handling for corrupted or binary files.
+
+- [ ] **ID 8: Set up chunk overlap logic for context continuity** (Priority: high)
+> Dependencies: 6, 7
+> Implement intelligent chunk overlap logic that maintains semantic context across chunk boundaries, particularly preserving function signatures, class definitions, and comment blocks.
 
 ### 🔗 Embedding & Search Infrastructure
 - [ ] **Task 9**: Set up Nvidia NIM local inference service
