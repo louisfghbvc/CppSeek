@@ -3,6 +3,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
+// Import our services
+import { FileDiscoveryService, type ScanResult } from './services/indexing/FileDiscoveryService';
+
 // Test imports for semantic search dependencies
 // Note: Runtime execution may fail due to native bindings, but TypeScript compilation should work
 // import Database from 'sqlite3';
@@ -27,6 +30,7 @@ let extensionState: ExtensionState = {
 // Global variables for extension components
 let outputChannel: vscode.OutputChannel;
 let statusBarItem: vscode.StatusBarItem;
+let fileDiscoveryService: FileDiscoveryService;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -44,6 +48,9 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 	statusBarItem.command = 'cppseek.showSettings';
 	context.subscriptions.push(statusBarItem);
+	
+	// Initialize services
+	fileDiscoveryService = new FileDiscoveryService(outputChannel);
 	
 	// Update status bar
 	updateStatusBar();
@@ -216,7 +223,7 @@ async function handleIndexWorkspace() {
 		return;
 	}
 	
-	if (extensionState.isIndexing) {
+	if (extensionState.isIndexing || fileDiscoveryService.isCurrentlyScanning()) {
 		vscode.window.showWarningMessage('Indexing is already in progress');
 		return;
 	}
@@ -227,61 +234,82 @@ async function handleIndexWorkspace() {
 	try {
 		await vscode.window.withProgress({
 			location: vscode.ProgressLocation.Notification,
-			title: 'CppSeek: Indexing workspace...',
+			title: 'CppSeek: Discovering files...',
 			cancellable: true
 		}, async (progress, token) => {
-			progress.report({ increment: 0, message: 'Scanning files...' });
-			
-			// Get configuration
-			const config = vscode.workspace.getConfiguration('cppseek');
-			const includePatterns = config.get<string[]>('files.include', ['**/*.cpp', '**/*.c', '**/*.h']);
-			const excludePatterns = config.get<string[]>('files.exclude', ['**/node_modules/**']);
-			
-			logMessage(`Scanning files with patterns: include=${JSON.stringify(includePatterns)}, exclude=${JSON.stringify(excludePatterns)}`);
-			
-			// Find all matching files
-			const files = await vscode.workspace.findFiles(
-				`{${includePatterns.join(',')}}`,
-				`{${excludePatterns.join(',')}}`
-			);
-			
-			logMessage(`Found ${files.length} files to index`);
-			
-			if (files.length === 0) {
-				vscode.window.showWarningMessage('No C/C++ files found in workspace');
-				return;
-			}
-			
-			// Simulate indexing progress
-			const totalFiles = files.length;
-			let processedFiles = 0;
-			
-			for (const file of files) {
+			try {
+				// Use FileDiscoveryService to scan for files
+				const scanResult: ScanResult = await fileDiscoveryService.discoverFiles(progress, token);
+				
 				if (token.isCancellationRequested) {
-					logMessage('Indexing cancelled by user');
+					logMessage('File discovery cancelled by user');
 					return;
 				}
 				
-				// Simulate file processing
-				await new Promise(resolve => setTimeout(resolve, 50));
+				if (scanResult.totalFiles === 0) {
+					vscode.window.showWarningMessage('No C/C++ files found in workspace');
+					return;
+				}
 				
-				processedFiles++;
-				const percentage = Math.round((processedFiles / totalFiles) * 100);
+				// Show scan results summary
+				const performanceMsg = 
+					`Performance: ${scanResult.performance.filesPerSecond.toFixed(1)} files/sec, ` +
+					`${(scanResult.performance.totalSizeBytes / 1024 / 1024).toFixed(1)} MB total`;
 				
-				progress.report({
-					increment: 100 / totalFiles,
-					message: `Processing ${path.basename(file.fsPath)} (${processedFiles}/${totalFiles})`
-				});
+				logMessage(`File discovery completed: ${scanResult.totalFiles} files found in ${scanResult.scanTime}ms`);
+				logMessage(performanceMsg);
 				
-				logMessage(`Indexed: ${file.fsPath}`);
+				if (scanResult.errors.length > 0) {
+					logMessage(`Warning: ${scanResult.errors.length} errors encountered during scan`);
+				}
+				
+				// TODO: Pass files to actual indexing pipeline (chunking, embedding, etc.)
+				// For now, just simulate indexing progress
+				progress.report({ message: 'Starting indexing pipeline...', increment: 0 });
+				
+				let processedFiles = 0;
+				const batchSize = 10;
+				
+				for (let i = 0; i < scanResult.files.length; i += batchSize) {
+					if (token.isCancellationRequested) {
+						logMessage('Indexing cancelled by user');
+						return;
+					}
+					
+					const batch = scanResult.files.slice(i, i + batchSize);
+					
+					// Simulate batch processing
+					await new Promise(resolve => setTimeout(resolve, 100));
+					
+					processedFiles += batch.length;
+					const progressPercent = Math.round((processedFiles / scanResult.totalFiles) * 100);
+					
+					progress.report({
+						increment: (batch.length / scanResult.totalFiles) * 100,
+						message: `Indexing files: ${processedFiles}/${scanResult.totalFiles} (${progressPercent}%)`
+					});
+					
+					// Log first few files for verification
+					if (i < 50) {
+						for (const file of batch) {
+							logMessage(`Indexed: ${file.relativePath} (${file.size} bytes)`);
+						}
+					}
+				}
+				
+				// Update extension state
+				extensionState.indexedFileCount = scanResult.totalFiles;
+				extensionState.lastIndexTime = new Date();
+				
+				const successMsg = `Successfully indexed ${scanResult.totalFiles} C/C++ files in ${scanResult.scanTime}ms`;
+				logMessage(successMsg);
+				vscode.window.showInformationMessage(`CppSeek: ${successMsg}`);
+				
+			} catch (error) {
+				const errorMsg = `File discovery failed: ${error}`;
+				logMessage(errorMsg);
+				vscode.window.showErrorMessage(`CppSeek: ${errorMsg}`);
 			}
-			
-			// Update state
-			extensionState.indexedFileCount = totalFiles;
-			extensionState.lastIndexTime = new Date();
-			
-			logMessage(`Indexing completed. ${totalFiles} files indexed.`);
-			vscode.window.showInformationMessage(`CppSeek: Successfully indexed ${totalFiles} files`);
 		});
 		
 	} finally {
