@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { ChunkOverlapManager, OverlapRegion, OverlapQuality } from './ChunkOverlapManager';
 
 export interface TextChunk {
     id: string;           // Unique chunk identifier
@@ -19,6 +20,8 @@ export interface ChunkingResult {
     totalTokens: number;
     processingTime: number;
     sourceFile: string;
+    overlaps?: OverlapRegion[];
+    overlapQuality?: OverlapQuality;
 }
 
 export interface ChunkingOptions {
@@ -39,9 +42,11 @@ export class TextChunker {
     private tokenizer: any = null;
     private tokenizerCache = new Map<string, number[]>();
     private isInitializing = false;
+    private overlapManager: ChunkOverlapManager;
     
     constructor(outputChannel: vscode.OutputChannel) {
         this.outputChannel = outputChannel;
+        this.overlapManager = new ChunkOverlapManager(outputChannel);
     }
 
     /**
@@ -357,11 +362,26 @@ export class TextChunker {
             `(${totalTokens} total tokens) in ${processingTime}ms`
         );
 
-        return {
-            chunks,
-            totalTokens,
-            processingTime,
+        // Apply overlap logic to enhance context continuity
+        const overlapResult = await this.overlapManager.applyOverlapLogic(
+            chunks, 
+            content, 
             sourceFile
+        );
+
+        const finalProcessingTime = Date.now() - startTime;
+        this.outputChannel.appendLine(
+            `[TextChunker] Applied overlap logic with ${overlapResult.overlaps.length} overlaps ` +
+            `(total processing time: ${finalProcessingTime}ms)`
+        );
+
+        return {
+            chunks: overlapResult.chunks,
+            totalTokens: overlapResult.chunks.reduce((sum, chunk) => sum + chunk.tokens, 0),
+            processingTime: finalProcessingTime,
+            sourceFile,
+            overlaps: overlapResult.overlaps,
+            overlapQuality: overlapResult.quality
         };
     }
 
@@ -502,5 +522,27 @@ export class TextChunker {
             size: this.tokenizerCache.size,
             hitRate: 0 // TODO: Implement hit rate tracking
         };
+    }
+
+    /**
+     * Get overlap quality metrics from the last chunking operation
+     */
+    getOverlapQuality(): OverlapQuality | null {
+        return this.overlapManager.getOverlapQuality();
+    }
+
+    /**
+     * Clear overlap manager cache
+     */
+    clearOverlapCache(): void {
+        this.overlapManager.clearCache();
+    }
+
+    /**
+     * Dispose resources
+     */
+    dispose(): void {
+        this.clearCache();
+        this.overlapManager.dispose();
     }
 } 

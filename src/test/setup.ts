@@ -85,7 +85,12 @@ const mockVscode = {
   Uri: {
     file: jest.fn(),
     parse: jest.fn()
-  }
+  },
+  CancellationTokenSource: jest.fn().mockImplementation(() => ({
+    token: { isCancellationRequested: false },
+    cancel: jest.fn(),
+    dispose: jest.fn()
+  }))
 };
 
 // Mock the vscode module

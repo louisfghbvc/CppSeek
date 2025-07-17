@@ -6,6 +6,7 @@ import * as path from 'path';
 // Import our services
 import { FileDiscoveryService, type ScanResult } from './services/indexing/FileDiscoveryService';
 import { TextChunker, type ChunkingResult } from './services/indexing/TextChunker';
+import { FileContentReader, type FileContent } from './services/indexing/FileContentReader';
 
 // Test imports for semantic search dependencies
 // Note: Runtime execution may fail due to native bindings, but TypeScript compilation should work
@@ -33,6 +34,7 @@ let outputChannel: vscode.OutputChannel;
 let statusBarItem: vscode.StatusBarItem;
 let fileDiscoveryService: FileDiscoveryService;
 let textChunker: TextChunker;
+let fileContentReader: FileContentReader;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -54,6 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Initialize services
 	fileDiscoveryService = new FileDiscoveryService(outputChannel);
 	textChunker = new TextChunker(outputChannel);
+	fileContentReader = new FileContentReader(outputChannel);
 	
 	// Update status bar
 	updateStatusBar();
@@ -281,23 +284,45 @@ async function handleIndexWorkspace() {
 					
 					const batch = scanResult.files.slice(i, i + batchSize);
 					
-					// Process batch of files
-					for (const file of batch) {
+					// Process batch of files with FileContentReader
+					const batchPaths = batch.map(file => file.path);
+					
+					// Read file contents using FileContentReader
+					const fileContents = await fileContentReader.readFiles(batchPaths, undefined, (processed, total) => {
+						progress.report({ message: `Reading files... ${processed}/${total}` });
+					});
+					
+					// Process each successfully read file
+					for (const fileContent of fileContents) {
 						try {
-							// Read file content
-							const fileUri = vscode.Uri.file(file.path);
-							const fileContent = await vscode.workspace.fs.readFile(fileUri);
-							const textContent = Buffer.from(fileContent).toString('utf-8');
+							const file = batch.find(f => f.path === fileContent.path);
+							if (!file) continue;
 							
 							// Skip empty files
-							if (textContent.trim().length === 0) {
+							if (fileContent.content.trim().length === 0) {
 								logMessage(`Skipping empty file: ${file.relativePath}`);
 								continue;
 							}
 							
+							// Log file content details for first few files
+							if (processedFiles < 10) {
+								logMessage(
+									`Processing ${file.relativePath}: ${fileContent.size} bytes, ` +
+									`${fileContent.lineCount} lines, encoding: ${fileContent.encoding}, ` +
+									`language: ${fileContent.metadata.language}`
+								);
+								
+								if (fileContent.metadata.hasUnicode) {
+									logMessage(`  Contains Unicode characters`);
+								}
+								if (fileContent.preprocessed) {
+									logMessage(`  Content was preprocessed`);
+								}
+							}
+							
 							// Chunk the file content
 							const chunkingResult: ChunkingResult = await textChunker.chunkText(
-								textContent, 
+								fileContent.content, 
 								file.relativePath
 							);
 							
@@ -309,13 +334,27 @@ async function handleIndexWorkspace() {
 									`Chunked ${file.relativePath}: ${chunkingResult.chunks.length} chunks, ` +
 									`${chunkingResult.totalTokens} tokens, ${chunkingResult.processingTime}ms`
 								);
+								
+								// Log chunk overlap information
+								if (chunkingResult.overlaps && chunkingResult.overlaps.length > 0) {
+									logMessage(`  ${chunkingResult.overlaps.length} semantic overlaps applied for context continuity`);
+									
+									if (chunkingResult.overlapQuality) {
+										const quality = chunkingResult.overlapQuality;
+										logMessage(`  Overlap quality: ${(quality.semanticPreservation * 100).toFixed(1)}% semantic preservation`);
+										logMessage(`  Preserved: ${quality.functionsPreserved} functions, ${quality.classesPreserved} classes, ${quality.commentsPreserved} comments`);
+									}
+								} else {
+									logMessage(`  No overlaps applied (single chunk or disabled)`);
+								}
 							}
 							
 							// TODO: Store chunks in vector database (Task 11)
 							// For now, just log the chunk creation
 							
 						} catch (error) {
-							logMessage(`Error processing file ${file.relativePath}: ${error}`);
+							const file = batch.find(f => f.path === fileContent.path);
+							logMessage(`Error processing file ${file?.relativePath || fileContent.path}: ${error}`);
 						}
 					}
 					
@@ -436,4 +475,7 @@ export function deactivate() {
 	if (statusBarItem) {
 		statusBarItem.dispose();
 	}
+	
+	// Dispose of services
+	fileContentReader?.dispose();
 }

@@ -27,11 +27,11 @@
 > Dependencies: 5
 > Implement text chunking algorithm that splits file content into fixed-size chunks of 500 tokens using @xenova/transformers for Llama-compatible tokenization, with configurable overlap between chunks for context continuity.
 
-- [ ] **ID 7: Implement file content reading and text processing** (Priority: high)
+- [x] **ID 7: Implement file content reading and text processing** (Priority: high)
 > Dependencies: 5
 > Implement robust file reading system with encoding detection, preprocessing steps (comment handling, whitespace normalization), and error handling for corrupted or binary files.
 
-- [ ] **ID 8: Set up chunk overlap logic for context continuity** (Priority: high)
+- [x] **ID 8: Set up chunk overlap logic for context continuity** (Priority: high)
 > Dependencies: 6, 7
 > Implement intelligent chunk overlap logic that maintains semantic context across chunk boundaries, particularly preserving function signatures, class definitions, and comment blocks.
 
