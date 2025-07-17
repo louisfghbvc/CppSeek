@@ -71,6 +71,16 @@
           "minimum": 0,
           "maximum": 200
         },
+        "cppseek.chunking.smartBoundaries": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable smart boundary detection to avoid splitting mid-function"
+        },
+        "cppseek.chunking.preserveFormatting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Maintain whitespace and indentation in chunks"
+        },
         "cppseek.files.include": {
           "type": "array",
           "default": ["**/*.cpp", "**/*.cxx", "**/*.cc", "**/*.c", "**/*.h", "**/*.hpp", "**/*.hxx"],

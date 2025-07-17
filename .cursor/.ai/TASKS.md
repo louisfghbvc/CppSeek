@@ -23,7 +23,7 @@
 > Dependencies: 4
 > Implement recursive file system scanning to discover all C/C++ source files (.cpp, .cc, .cxx) and header files (.h, .hpp, .hxx) within the VSCode workspace, with configurable file patterns and exclusion rules.
 
-- [ ] **ID 6: Create fixed-size text chunking logic (500 tokens with overlap)** (Priority: critical) 
+- [x] **ID 6: Create fixed-size text chunking logic (500 tokens with overlap)** (Priority: critical) 
 > Dependencies: 5
 > Implement text chunking algorithm that splits file content into fixed-size chunks of 500 tokens using @xenova/transformers for Llama-compatible tokenization, with configurable overlap between chunks for context continuity.
 

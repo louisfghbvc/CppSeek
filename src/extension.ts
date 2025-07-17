@@ -5,6 +5,7 @@ import * as path from 'path';
 
 // Import our services
 import { FileDiscoveryService, type ScanResult } from './services/indexing/FileDiscoveryService';
+import { TextChunker, type ChunkingResult } from './services/indexing/TextChunker';
 
 // Test imports for semantic search dependencies
 // Note: Runtime execution may fail due to native bindings, but TypeScript compilation should work
@@ -31,6 +32,7 @@ let extensionState: ExtensionState = {
 let outputChannel: vscode.OutputChannel;
 let statusBarItem: vscode.StatusBarItem;
 let fileDiscoveryService: FileDiscoveryService;
+let textChunker: TextChunker;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -51,6 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	// Initialize services
 	fileDiscoveryService = new FileDiscoveryService(outputChannel);
+	textChunker = new TextChunker(outputChannel);
 	
 	// Update status bar
 	updateStatusBar();
@@ -263,12 +266,12 @@ async function handleIndexWorkspace() {
 					logMessage(`Warning: ${scanResult.errors.length} errors encountered during scan`);
 				}
 				
-				// TODO: Pass files to actual indexing pipeline (chunking, embedding, etc.)
-				// For now, just simulate indexing progress
-				progress.report({ message: 'Starting indexing pipeline...', increment: 0 });
+				// Start actual indexing pipeline with chunking
+				progress.report({ message: 'Starting text chunking pipeline...', increment: 0 });
 				
 				let processedFiles = 0;
-				const batchSize = 10;
+				let totalChunks = 0;
+				const batchSize = 5; // Smaller batch for file reading and chunking
 				
 				for (let i = 0; i < scanResult.files.length; i += batchSize) {
 					if (token.isCancellationRequested) {
@@ -278,24 +281,55 @@ async function handleIndexWorkspace() {
 					
 					const batch = scanResult.files.slice(i, i + batchSize);
 					
-					// Simulate batch processing
-					await new Promise(resolve => setTimeout(resolve, 100));
+					// Process batch of files
+					for (const file of batch) {
+						try {
+							// Read file content
+							const fileUri = vscode.Uri.file(file.path);
+							const fileContent = await vscode.workspace.fs.readFile(fileUri);
+							const textContent = Buffer.from(fileContent).toString('utf-8');
+							
+							// Skip empty files
+							if (textContent.trim().length === 0) {
+								logMessage(`Skipping empty file: ${file.relativePath}`);
+								continue;
+							}
+							
+							// Chunk the file content
+							const chunkingResult: ChunkingResult = await textChunker.chunkText(
+								textContent, 
+								file.relativePath
+							);
+							
+							totalChunks += chunkingResult.chunks.length;
+							
+							// Log chunking results for first few files
+							if (processedFiles < 10) {
+								logMessage(
+									`Chunked ${file.relativePath}: ${chunkingResult.chunks.length} chunks, ` +
+									`${chunkingResult.totalTokens} tokens, ${chunkingResult.processingTime}ms`
+								);
+							}
+							
+							// TODO: Store chunks in vector database (Task 11)
+							// For now, just log the chunk creation
+							
+						} catch (error) {
+							logMessage(`Error processing file ${file.relativePath}: ${error}`);
+						}
+					}
 					
 					processedFiles += batch.length;
 					const progressPercent = Math.round((processedFiles / scanResult.totalFiles) * 100);
 					
 					progress.report({
 						increment: (batch.length / scanResult.totalFiles) * 100,
-						message: `Indexing files: ${processedFiles}/${scanResult.totalFiles} (${progressPercent}%)`
+						message: `Processing files: ${processedFiles}/${scanResult.totalFiles} (${progressPercent}%)`
 					});
-					
-					// Log first few files for verification
-					if (i < 50) {
-						for (const file of batch) {
-							logMessage(`Indexed: ${file.relativePath} (${file.size} bytes)`);
-						}
-					}
 				}
+				
+				// Report chunking results
+				logMessage(`Text chunking completed: ${totalChunks} total chunks created from ${processedFiles} files`);
 				
 				// Update extension state
 				extensionState.indexedFileCount = scanResult.totalFiles;
