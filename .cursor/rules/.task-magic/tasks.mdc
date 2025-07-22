@@ -376,8 +376,8 @@ The agent should interpret user requests and map them to the following actions. 
     *   If no `## Test Strategy` section exists, or if the user confirms after being asked about the tests: Proceed to the "Complete Task {id}" step.
 *   **Complete Task {id}:**
     *   **Cleanup:** Before marking as complete, review the code changes made for this task and remove any temporary logging or print statements (e.g., language-specific debug prints, verbose console logs) that were added for debugging or testing purposes. Only leave logs that are essential for production monitoring (e.g., errors, critical warnings).
-    *   **System Config Check:** Check if `.cursor/.ai/.system-config` exists and contains `memory_bank_enabled: true`:
-        *   Use `file_search` to check if `.cursor/.ai/.system-config` exists
+    *   **System Config Check:** Check if `.ai/.system-config` exists and contains `memory_bank_enabled: true`:
+        *   Use `file_search` to check if `.ai/.system-config` exists
         *   If exists, use `read_file` to check if `memory_bank_enabled: true`
         *   If Memory Bank is enabled, proceed to update Memory Bank files
         *   If Memory Bank is disabled or config missing, skip Memory Bank updates
@@ -387,7 +387,7 @@ The agent should interpret user requests and map them to the following actions. 
         *   Ensure consistency between Task Magic and Memory Bank systems
     *   **Update Task Status:** Update task {id} YAML (`status: completed`, `assigned_agent: null`, `completed_at`) and update the corresponding line in `TASKS.md` to `[x]`.
 *   **Fail Task {id} "{Reason}":** 
-    *   **System Config Check:** Check if `.cursor/.ai/.system-config` exists and contains `memory_bank_enabled: true`
+    *   **System Config Check:** Check if `.ai/.system-config` exists and contains `memory_bank_enabled: true`
     *   **Conditional Memory Bank Update:** If Memory Bank is enabled, update `memory-bank/progress.md` to reflect failed task status
     *   **Update Task Status:** Update task {id} YAML (`status: failed`, `error_log`, etc.) and update `TASKS.md`.
 *   **Show Task {id} Details:** Read the full content (YAML and Markdown) of `task{id}_name.md` (checking both `.ai/tasks` and `.ai/memory/tasks` for files like `task15_...md` or `task15.1_...md`) and display it.
@@ -401,7 +401,7 @@ The agent should interpret user requests and map them to the following actions. 
         *   **Use `run_terminal_cmd` to execute an `mv` command (e.g., `mv .ai/tasks/task{id}_name.md .ai/memory/tasks/`).**
     *   Append entries to `.ai/memory/TASKS_LOG.md` using the new format (Title, Status, Timestamp, Dependencies, Description) via `read_file` and `edit_file`.
     *   Remove corresponding entries from `.ai/TASKS.md` via `read_file` and `edit_file`.
-    *   **System Config Check:** Check if `.cursor/.ai/.system-config` exists and contains `memory_bank_enabled: true`
+    *   **System Config Check:** Check if `.ai/.system-config` exists and contains `memory_bank_enabled: true`
     *   **Conditional Memory Bank Update:** If Memory Bank is enabled:
         *   Update `memory-bank/progress.md` to reflect archived tasks and current project status
         *   Update `memory-bank/activeContext.md` to reflect completion of archived work and next focus

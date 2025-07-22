@@ -28,14 +28,14 @@ flowchart TD
     ValidateConfig -->|Yes| ApplyMode[Apply saved mode]
     ValidateConfig -->|No| AutoDetect
     
-    AutoDetect --> ReadPlan[Read .cursor/.ai/plans/PLAN.md]
+    AutoDetect --> ReadPlan[Read .ai/plans/PLAN.md]
     ReadPlan --> AnalyzePlan[Analyze plan content]
     AnalyzePlan --> Decision{Memory Bank needed?}
     
     Decision -->|Yes| EnableMB[Enable Memory Bank Mode]
     Decision -->|No| TaskOnly[Task Magic Only Mode]
     
-    EnableMB --> SaveConfig[Save decision to .cursor/.ai/.system-config]
+    EnableMB --> SaveConfig[Save decision to .ai/.system-config]
     TaskOnly --> SaveConfig
     SaveConfig --> ApplyMode
     
@@ -107,7 +107,7 @@ def should_enable_memory_bank(plan_content, project_context):
 
 ### System Configuration File
 
-The detection decision is saved in `.cursor/.ai/.system-config`:
+The detection decision is saved in `.ai/.system-config`:
 
 ```yaml
 # System Configuration
@@ -226,7 +226,7 @@ flowchart TD
     end
     
     subgraph "Integration with Task Magic"
-        TM[.cursor/.ai/memory/]
+        TM[.ai/memory/]
         TMT[tasks/]
         TMP[plans/]
         TMM[history/]
@@ -262,7 +262,7 @@ flowchart TD
     TaskMagicOnly --> CheckTaskMagic[Check Task Magic State]
     EstablishContext --> CheckTaskMagic
     
-    CheckTaskMagic --> CheckHistory[Review .cursor/.ai/memory/ archives]
+    CheckTaskMagic --> CheckHistory[Review .ai/memory/ archives]
     CheckHistory --> Ready[Ready for Work]
 ```
 
@@ -292,7 +292,7 @@ flowchart TD
 - Run build/compile commands
 
 ✅ **PLAN MODE ONLY CREATES:**
-- Planning documents (.md files in .cursor/.ai/plans/)
+- Planning documents (.md files in .ai/plans/)
 - Architecture diagrams (Mermaid)
 - PRD documents (Product Requirements Documents)
 - Technical specification documents

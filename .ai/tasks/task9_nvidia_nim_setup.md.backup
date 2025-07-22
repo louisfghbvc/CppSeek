@@ -1,0 +1,154 @@
+---
+id: 9
+title: 'Set up Nvidia NIM local inference service'
+status: pending
+priority: critical
+feature: Embedding & Search Infrastructure
+dependencies:
+  - 8
+assigned_agent: null
+created_at: "2025-07-17T12:00:00Z"
+started_at: null
+completed_at: null
+error_log: null
+---
+
+## Description
+
+Set up Nvidia NIM (Nvidia Inference Microservices) local inference service to provide embedding generation capabilities for the CppSeek semantic search engine. This task establishes the foundational AI service infrastructure that will power semantic understanding of C/C++ code.
+
+## Details
+
+### Core Functionality Requirements
+- **NIM Container Deployment**: Deploy llama-3.2-nv-embedqa-1b-v2 model locally via Docker
+- **Service Configuration**: Configure ports, memory limits, and resource allocation
+- **API Endpoint Setup**: Establish health checks and embedding generation endpoints
+- **Error Handling**: Implement robust service availability checking and fallback mechanisms
+- **Performance Optimization**: Optimize container settings for local development environment
+- **Documentation**: Create setup guides and configuration documentation
+
+### Implementation Steps
+1. **Environment Setup and Prerequisites**
+   - Verify Docker installation and version compatibility
+   - Check Nvidia GPU drivers (optional but recommended for performance)
+   - Assess system resource requirements (memory, disk space, CPU)
+   - Set up NIM registry access and authentication credentials
+
+2. **Container Configuration and Deployment**
+   - Download NIM container image for llama-3.2-nv-embedqa-1b-v2
+   - Configure container settings (ports, volumes, environment variables)
+   - Set up model persistence and caching mechanisms
+   - Deploy container with appropriate resource limits
+
+3. **Service Integration and Testing**
+   - Implement health check monitoring
+   - Test API endpoint connectivity and responsiveness
+   - Validate embedding generation with sample inputs
+   - Set up service restart policies and monitoring
+
+### Container Configuration
+```bash
+# Example Docker deployment command
+docker run -d \
+  --name cppseek-nim \
+  --gpus all \
+  -p 8000:8000 \
+  -v nim_cache:/nim_cache \
+  -e NIM_CACHE_PATH=/nim_cache \
+  -e NIM_MODEL_NAME=llama-3.2-nv-embedqa-1b-v2 \
+  --restart unless-stopped \
+  nvcr.io/nim/meta/llama-3.2-nv-embedqa-1b-v2:latest
+```
+
+### Service Configuration Interface
+```typescript
+interface NIMServiceConfig {
+  baseUrl: string;
+  port: number;
+  timeout: number;
+  retryAttempts: number;
+  healthCheckInterval: number;
+  modelName: string;
+  maxConcurrentRequests: number;
+}
+
+const defaultConfig: NIMServiceConfig = {
+  baseUrl: 'http://localhost',
+  port: 8000,
+  timeout: 30000,
+  retryAttempts: 3,
+  healthCheckInterval: 60000,
+  modelName: 'llama-3.2-nv-embedqa-1b-v2',
+  maxConcurrentRequests: 10
+};
+```
+
+### API Endpoints to Implement
+- `GET /health` - Service health check and readiness probe
+- `POST /embeddings` - Generate embeddings for text input
+- `GET /models` - List available models and their status
+- `GET /version` - Service version and build information
+- `GET /metrics` - Performance and usage metrics
+
+## Testing Strategy
+
+### Unit Tests
+- [ ] Service connection and authentication testing
+- [ ] API endpoint availability verification
+- [ ] Basic embedding generation with known inputs
+- [ ] Error handling for service unavailability scenarios
+
+### Integration Tests
+- [ ] Container startup and shutdown lifecycle testing
+- [ ] Service restart behavior and persistence verification
+- [ ] Resource usage monitoring under various loads
+- [ ] Concurrent request handling capabilities
+
+### Performance Tests
+- [ ] Embedding generation latency measurement
+- [ ] Memory usage pattern analysis
+- [ ] Container resource limit validation
+- [ ] Service startup time optimization
+
+## Acceptance Criteria
+
+### Primary Requirements
+- [ ] NIM container successfully deployed and running locally
+- [ ] Service responds to health checks on expected port (8000)
+- [ ] All API endpoints accessible and functional
+- [ ] Container configured for llama-3.2-nv-embedqa-1b-v2 model
+- [ ] Service can generate embeddings for text input
+- [ ] Error handling implemented for service unavailability
+- [ ] Setup and configuration documentation completed
+
+### Performance Requirements
+- [ ] Service startup time < 60 seconds after container start
+- [ ] Embedding generation latency < 500ms for 500-token chunks
+- [ ] Container memory usage < 4GB (configurable based on system)
+- [ ] Service availability > 99% during development sessions
+- [ ] Concurrent request handling (minimum 5 simultaneous requests)
+
+## Success Metrics
+- Service deployment success rate: 100% on supported systems
+- Average startup time: < 60 seconds
+- API response time: < 500ms for embedding generation
+- Service uptime: > 99% during development sessions
+- Memory efficiency: Optimized usage within system constraints
+
+## Definition of Done
+- [ ] NIM container running stable in local development environment
+- [ ] All API endpoints responding correctly with expected data formats
+- [ ] Health checks consistently passing and monitoring functional
+- [ ] Sample embedding generation working with test code snippets
+- [ ] Comprehensive error handling implemented and tested
+- [ ] Setup and configuration documentation complete
+- [ ] Service integration ready for Task 10 (NIM API Integration)
+- [ ] Performance baseline established and documented
+- [ ] Container management scripts and procedures created
+
+## Next Steps
+Upon completion, this task enables:
+- **Task 10**: Integration of NIM embedding API into CppSeek
+- **Embedding Pipeline**: Foundation for code chunk vectorization
+- **Semantic Search**: Core AI service for semantic understanding
+- **Development Workflow**: Stable AI service for continued development

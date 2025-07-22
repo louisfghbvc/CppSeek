@@ -15,20 +15,20 @@ The system consists of three main components, each governed by its own detailed 
 
 1.  **Plans (`@plans.mdc`)**:
     *   **Purpose**: Defines how Product Requirements Documents (PRDs) are created and structured for the overall project and specific features.
-    *   **Location**: PRDs are stored in `.cursor/.ai/plans/`, with feature-specific plans in `.cursor/.ai/plans/features/`.
-    *   **Key File**: A global `PLAN.md` is mandatory in `.cursor/.ai/plans/`.
+    *   **Location**: PRDs are stored in `.ai/plans/`, with feature-specific plans in `.ai/plans/features/`.
+    *   **Key File**: A global `PLAN.md` is mandatory in `.ai/plans/`.
     *   **Details**: For plan creation, fully review [task-magic/plans.mdc](mdc:.cursor/rules/task-magic/plans.mdc)
 
 2.  **Tasks (`@tasks.mdc`)**:
     *   **Purpose**: Governs the creation, management, and lifecycle of individual development tasks.
-    *   **Active Tasks**: All active tasks reside in `.cursor/.ai/tasks/` as `task{id}_name.md` files.
-    *   **Master View**: A master checklist, `.cursor/.ai/TASKS.md`, mirrors the status of tasks in the `.cursor/.ai/tasks/` directory and must be kept synchronized.
+    *   **Active Tasks**: All active tasks reside in `.ai/tasks/` as `task{id}_name.md` files.
+    *   **Master View**: A master checklist, `.ai/TASKS.md`, mirrors the status of tasks in the `.ai/tasks/` directory and must be kept synchronized.
     *   **Details**: For task creation, fully review [task-magic/tasks.mdc](mdc:.cursor/rules/task-magic/tasks.mdc)
 
 3.  **Memory (`@memory.mdc`)**:
     *   **Purpose**: Archives completed and failed tasks to provide historical context.
-    *   **Location**: Archived task files are stored in `.cursor/.ai/memory/tasks/`.
-    *   **Log File**: A chronological log of archived tasks is maintained in `.cursor/.ai/memory/TASKS_LOG.md`.
+    *   **Location**: Archived task files are stored in `.ai/memory/tasks/`.
+    *   **Log File**: A chronological log of archived tasks is maintained in `.ai/memory/TASKS_LOG.md`.
     *   **Details**: For storing to memory, full review [task-magic/memory.mdc](mdc:.cursor/rules/task-magic/memory.mdc)
 
 4.  **Memory Bank Integration (`@memory-bank/_index.mdc`)**:

@@ -158,7 +158,7 @@ src/
 │       └── extension.test.ts  # Extension tests
 └── [future modules]    # Semantic search implementation
 
-.cursor/.ai/           # Task Magic system
+.ai/           # Task Magic system
 ├── tasks/            # Individual task files
 ├── plans/            # Project requirements
 └── memory/           # Completed task archive
