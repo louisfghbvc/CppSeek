@@ -286,7 +286,7 @@ This file provides a quick, human-readable overview of all tasks currently in th
 
 ## Workflow
 
-The workflow for the Task Magic system is illustrated in a separate diagram. Please refer to [task-magic/workflow.md](mdc:.cursor/rules/task-magic/workflow.md) for the detailed process of task creation, execution, and archival.
+The workflow for the Task Magic system is illustrated in a separate diagram. Please refer to [.task-magic/workflow.md](mdc:.cursor/rules/.task-magic/workflow.md) for the detailed process of task creation, execution, and archival.
 
 ## Workflow
 
