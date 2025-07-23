@@ -10,11 +10,13 @@
 - **clangd**: Advanced AST parsing and semantic analysis (Phase 2+)
 
 ### AI/ML Technologies
-- **Nvidia Models**: Local embedding service (llama-3.2-nv-embedqa-1b-v2)
-- **FAISS**: Vector similarity search and indexing
-- **SQLite**: Metadata storage and caching
-- **Cosine Similarity**: Vector comparison algorithm
-- **@xenova/transformers**: Llama-compatible tokenization (optimized for our Nvidia model)
+- **Nvidia NIM API**: Cloud-hosted embedding service (llama-3.2-nv-embedqa-1b-v2) ✅ **IMPLEMENTED**
+- **OpenAI SDK**: API client for NIM compatibility ✅ **IMPLEMENTED** 
+- **FAISS**: Vector similarity search and indexing ⏳ **PENDING**
+- **SQLite**: Metadata storage and caching ⏳ **PENDING**
+- **Cosine Similarity**: Vector comparison algorithm ⏳ **PENDING**
+- **@xenova/transformers**: Llama-compatible tokenization ✅ **IMPLEMENTED**
+- **dotenv**: Secure environment configuration ✅ **IMPLEMENTED**
 
 ### Development Environment
 - **VS Code**: Development IDE
@@ -45,18 +47,26 @@ code --version  # VS Code 1.74.0 or higher
 ```json
 {
   "dependencies": {
-    "vscode": "^1.74.0",
-    "faiss-node": "^0.5.0",
-    "sqlite3": "^5.1.0",
-    "@xenova/transformers": "^2.17.2"
+    "vscode": "^1.102.0",
+    "faiss-node": "^0.5.1",
+    "sqlite3": "^5.1.7",
+    "@xenova/transformers": "^2.17.2",
+    "openai": "^4.0.0",
+    "dotenv": "^16.0.0",
+    "chardet": "^2.1.0",
+    "iconv-lite": "^0.6.3"
   },
   "devDependencies": {
-    "@types/vscode": "^1.74.0",
-    "typescript": "^4.9.0",
-    "jest": "^29.0.0",
-    "@types/jest": "^29.0.0",
-    "eslint": "^8.0.0",
-    "prettier": "^3.6.0"
+    "@types/vscode": "^1.102.0",
+    "@types/node": "20.x",
+    "@types/sqlite3": "^3.1.11",
+    "typescript": "^5.8.3",
+    "jest": "^29.7.0",
+    "@types/jest": "^30.0.0",
+    "eslint": "^9.25.1",
+    "prettier": "^3.6.2",
+    "webpack": "^5.99.7",
+    "ts-loader": "^9.5.2"
   }
 }
 ```
@@ -94,10 +104,13 @@ code --version  # VS Code 1.74.0 or higher
   - Model-specific tokenizer support
 
 ### Embedding Strategy
-**Decision**: Local-first approach with Nvidia models
-- **Primary**: Nvidia llama-3.2-nv-embedqa-1b-v2 (local)
-- **Benefits**: No API costs, full privacy, offline capability
-- **Tokenization**: @xenova/transformers for accurate token counting
+**Decision**: Cloud-hosted Nvidia NIM API with secure configuration
+- **Primary**: Nvidia llama-3.2-nv-embedqa-1b-v2 (cloud-hosted NIM API) ✅ **IMPLEMENTED & VALIDATED**
+- **Configuration**: .env file → environment variables → VSCode settings priority
+- **Performance**: 361ms average response time, 2048-dimensional embeddings
+- **Security**: Secure API key management with .gitignore protection
+- **Benefits**: No local GPU requirements, managed infrastructure, instant deployment
+- **Tokenization**: @xenova/transformers for accurate token counting ✅ **IMPLEMENTED**
 
 ### Storage Strategy
 **Decision**: Local-first with cloud backup option

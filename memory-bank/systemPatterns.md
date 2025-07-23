@@ -82,10 +82,13 @@ graph LR
 - **Trade-offs**: Phase 1 may have less precise chunk boundaries
 
 ### Embedding Strategy
-**Decision**: Use Nvidia llama-3.2-nv-embedqa-1b-v2 for local deployment
-- **Rationale**: Local deployment eliminates API dependencies and ensures privacy
-- **Benefits**: No external API costs, full data control, offline capability
-- **Trade-offs**: Requires local GPU resources, model management complexity
+**Decision**: Use Nvidia llama-3.2-nv-embedqa-1b-v2 via cloud-hosted NIM API
+- **Updated Implementation**: Cloud-hosted API instead of local deployment
+- **Rationale**: Simplified deployment, no local GPU requirements, reliable service
+- **Benefits**: No local resource requirements, managed infrastructure, instant availability
+- **Configuration**: Secure .env file API key management with VSCode settings integration
+- **Performance**: Validated 361ms response time, 2048-dimensional embeddings
+- **Trade-offs**: Requires internet connectivity and API costs (offset by development simplicity)
 
 ### Vector Database Selection
 **Decision**: Start with FAISS for local storage
