@@ -229,6 +229,105 @@
           "description": "Batch size for processing multiple embeddings",
           "minimum": 1,
           "maximum": 100
+        },
+        "cppseek.vectorStorage.indexType": {
+          "type": "string",
+          "default": "auto",
+          "description": "FAISS index type for vector storage",
+          "enum": [
+            "auto",
+            "Flat",
+            "IVFFlat",
+            "HNSW"
+          ]
+        },
+        "cppseek.vectorStorage.dimension": {
+          "type": "number",
+          "default": 2048,
+          "description": "Vector dimension for embeddings",
+          "minimum": 64,
+          "maximum": 4096
+        },
+        "cppseek.vectorStorage.batchSize": {
+          "type": "number",
+          "default": 50,
+          "description": "Batch size for vector operations",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "cppseek.vectorStorage.autoSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically save vector index to disk"
+        },
+        "cppseek.vectorStorage.autoSaveInterval": {
+          "type": "number",
+          "default": 300000,
+          "description": "Auto-save interval in milliseconds (5 minutes default)",
+          "minimum": 30000
+        },
+        "cppseek.vectorStorage.memoryLimit": {
+          "type": "number",
+          "default": 500,
+          "description": "Memory limit for vector storage in MB",
+          "minimum": 50,
+          "maximum": 2048
+        },
+        "cppseek.vectorStorage.metric": {
+          "type": "string",
+          "default": "COSINE",
+          "description": "Distance metric for vector similarity",
+          "enum": [
+            "COSINE",
+            "L2",
+            "IP"
+          ]
+        },
+        "cppseek.vectorStorage.nlist": {
+          "type": "number",
+          "default": 100,
+          "description": "Number of clusters for IVFFlat index",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "cppseek.vectorStorage.nprobe": {
+          "type": "number",
+          "default": 10,
+          "description": "Number of clusters to search in IVFFlat",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cppseek.vectorStorage.efConstruction": {
+          "type": "number",
+          "default": 200,
+          "description": "HNSW construction parameter",
+          "minimum": 16,
+          "maximum": 1000
+        },
+        "cppseek.vectorStorage.efSearch": {
+          "type": "number",
+          "default": 50,
+          "description": "HNSW search parameter",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "cppseek.vectorStorage.minScore": {
+          "type": "number",
+          "default": 0.1,
+          "description": "Minimum similarity score for search results",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "cppseek.vectorStorage.enableFilters": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable metadata filtering in search results"
+        },
+        "cppseek.vectorStorage.searchTimeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Search operation timeout in milliseconds",
+          "minimum": 1000
         }
       }
     }
