@@ -133,7 +133,11 @@
           "type": "string",
           "default": "auto",
           "description": "Preferred text encoding (auto, utf8, latin1)",
-          "enum": ["auto", "utf8", "latin1"]
+          "enum": [
+            "auto",
+            "utf8",
+            "latin1"
+          ]
         },
         "cppseek.fileReading.preprocessWhitespace": {
           "type": "boolean",
@@ -144,7 +148,11 @@
           "type": "string",
           "default": "preserve",
           "description": "How to handle comments in code files",
-          "enum": ["preserve", "remove", "normalize"]
+          "enum": [
+            "preserve",
+            "remove",
+            "normalize"
+          ]
         },
         "cppseek.fileReading.skipBinaryFiles": {
           "type": "boolean",
@@ -179,6 +187,48 @@
           "type": "boolean",
           "default": true,
           "description": "Include relevant comments in overlap regions"
+        },
+        "cppseek.nim.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Nvidia NIM API key for embedding generation"
+        },
+        "cppseek.nim.baseUrl": {
+          "type": "string",
+          "default": "https://integrate.api.nvidia.com/v1",
+          "description": "NIM API base URL"
+        },
+        "cppseek.nim.model": {
+          "type": "string",
+          "default": "nvidia/llama-3.2-nv-embedqa-1b-v2",
+          "description": "NIM embedding model name"
+        },
+        "cppseek.nim.timeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "API request timeout in milliseconds",
+          "minimum": 1000
+        },
+        "cppseek.nim.retryAttempts": {
+          "type": "number",
+          "default": 3,
+          "description": "Number of retry attempts for failed requests",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "cppseek.nim.maxConcurrentRequests": {
+          "type": "number",
+          "default": 10,
+          "description": "Maximum concurrent API requests",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cppseek.nim.batchSize": {
+          "type": "number",
+          "default": 50,
+          "description": "Batch size for processing multiple embeddings",
+          "minimum": 1,
+          "maximum": 100
         }
       }
     }
@@ -226,8 +276,10 @@
   "dependencies": {
     "@xenova/transformers": "^2.17.2",
     "chardet": "^2.1.0",
+    "dotenv": "^17.2.0",
     "faiss-node": "^0.5.1",
     "iconv-lite": "^0.6.3",
+    "openai": "^5.10.2",
     "sqlite3": "^5.1.7"
   }
 }
