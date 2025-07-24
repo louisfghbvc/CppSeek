@@ -17,7 +17,10 @@ This file tracks all active and completed tasks for the CppSeek project.
 - ✅ Task 10: Create semantic search service
 
 ### 🟡 In Progress Tasks
-- 🔄 **Task 11: Set up FAISS vector storage system (EXPANDED)** ← Phase 2: Native binding enhancement
+- [-] **ID 11: Set up FAISS vector storage system (EXPANDED)** (Priority: high)
+> Dependencies: 10
+> Set up FAISS (Facebook AI Similarity Search) vector database for efficient vector storage and similarity search in the CppSeek VSCode extension, with native binding support and environment compatibility. This task has been expanded to systematically address environment compatibility issues and implement native bindings where possible.
+
   - [ ] **ID 11.1: Environment Setup & Toolchain Configuration** (Priority: critical)
   > Dependencies: 11
   > Configure CentOS7 compatible toolchain to support native binding compilation for FAISS and SQLite3, enabling enhanced performance while maintaining JavaScript fallbacks.
@@ -38,7 +41,9 @@ This file tracks all active and completed tasks for the CppSeek project.
   > Dependencies: 11.4
   > Comprehensive testing and validation of the hybrid vector storage implementation across different environment configurations, ensuring robust operation and proper fallback behavior.
 
-- 🔄 Task 12: Implement cosine similarity search algorithm
+- [ ] **ID 12: Implement cosine similarity search algorithm** (Priority: medium)
+> Dependencies: 11
+> Implement cosine similarity search algorithm for vector comparison and ranking in the CppSeek semantic search system.
 
 ### ⚪ Pending Tasks
 - ⏳ Task 13: Create search results ranking system
@@ -61,3 +66,4 @@ This file tracks all active and completed tasks for the CppSeek project.
 - **Phase 2 Active**: Native binding enhancement with hybrid architecture approach
 - **Environment Available**: CentOS7 GCC 10.3.0 + SQLite 3.42.0 for compatible native bindings
 - **Hybrid Strategy**: Native SQLite3 + JavaScript vectors for optimal performance and compatibility
+- **Task Magic Format**: All tasks now follow standard Task Magic format with proper ID numbering and structure
