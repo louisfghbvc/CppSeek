@@ -38,3 +38,11 @@ The system consists of three main components, each governed by its own detailed 
     *   **Details**: For Memory Bank operations, review [memory-bank.mdc](mdc:.cursor/rules/memory-bank.mdc) and its modular components
 
 This interconnected system allows for structured project development with persistent memory, from high-level planning to task execution, historical review, and continuous learning across AI agent sessions.
+
+## 🚨 CRITICAL: Real Timestamps Only
+
+**Before ANY task update:**
+```bash
+# ALWAYS run this command before updating task timestamps:
+date -u +"%Y-%m-%dT%H:%M:%SZ"
+```
