@@ -1,61 +1,45 @@
 /**
- * Vector Storage Module - Hybrid Implementation
+ * Vector Storage Module - Cleanup Phase
  * 
- * Provides vector storage for semantic search functionality with native SQLite3 support
- * and JavaScript fallbacks for compatibility
+ * JSVectorStorage and MemoryMetadataStore have been removed.
+ * FAISS implementation will be added in implementation phase.
  */
 
 export * from './types';
 
-// Import the JavaScript implementations for guaranteed compatibility
-import { JSVectorStorage } from './jsVectorStorage';
-import { MemoryMetadataStore } from './memoryMetadataStore';
-
-// Try to load native SQLite3 implementation, fallback to memory store
-let NativeMetadataStore: typeof MemoryMetadataStore;
+// Import native SQLite3 metadata store (if available)
+let MetadataStore: any;
 let isNativeAvailable = false;
 
 try {
   // Test SQLite3 availability
   const sqlite3 = require('sqlite3');
-  const { MetadataStore } = require('./metadataStore');
-  NativeMetadataStore = MetadataStore;
+  const { MetadataStore: NativeMetadataStore } = require('./metadataStore');
+  MetadataStore = NativeMetadataStore;
   isNativeAvailable = true;
-  console.log('✅ SQLite3 native binding available - using high-performance metadata store');
+  console.log('✅ SQLite3 native binding available');
 } catch (error) {
-  console.log('⚠️  SQLite3 native binding not available - falling back to memory store');
+  console.log('⚠️  SQLite3 native binding not available');
   console.log('   Error:', (error as Error).message);
-  NativeMetadataStore = MemoryMetadataStore;
+  MetadataStore = null;
   isNativeAvailable = false;
 }
 
-// Export the appropriate implementations
-export const FAISSVectorStorage = JSVectorStorage; // Always use JS vector storage (FAISS compatibility issues)
-export const MetadataStore = NativeMetadataStore;  // Use native SQLite3 when available, fallback to memory
+// Export available components
+export { MetadataStore };
 
 // Export runtime information
 export const isNativeSQLiteAvailable = isNativeAvailable;
 
-// Provide the selectOptimalIndex function for JS implementation
-export const selectOptimalIndex = function(_vectorCount: number, dimension: number) {
-  // For JS implementation, we always use "Flat" equivalent
-  // _vectorCount is ignored since JS implementation doesn't have index type optimization
-  return {
-    indexType: 'Flat' as const,
-    dimension,
-    metric: 'COSINE' as const
-  };
-};
-
-// Export configuration helper for hybrid mode
+// Note: Vector storage implementation (FAISS) will be added in implementation phase
 export const getStorageInfo = () => {
   return {
-    vectorStorage: 'JavaScript (JSVectorStorage)',
-    metadataStorage: isNativeAvailable ? 'Native SQLite3' : 'Memory (JavaScript)',
-    isHybrid: true,
+    vectorStorage: 'Not implemented (JSVectorStorage removed)',
+    metadataStorage: isNativeAvailable ? 'Native SQLite3' : 'Not available',
+    status: 'Cleanup phase - FAISS implementation pending',
     nativeSupport: {
       sqlite3: isNativeAvailable,
-      faiss: false // FAISS has GLIBC compatibility issues
+      faiss: false // To be implemented
     }
   };
 }; 

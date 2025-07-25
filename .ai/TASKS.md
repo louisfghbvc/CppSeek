@@ -19,28 +19,27 @@ This file tracks all active and completed tasks for the CppSeek project.
 ### 🟡 In Progress Tasks
 - [-] **ID 11: Set up FAISS vector storage system (EXPANDED)** (Priority: high)
 > Dependencies: 10
-> Set up FAISS (Facebook AI Similarity Search) vector database for efficient vector storage and similarity search in the CppSeek VSCode extension, with native binding support and environment compatibility. This task has been expanded to systematically address environment compatibility issues and implement native bindings where possible.
+> Set up FAISS (Facebook AI Similarity Search) vector storage system for high-performance semantic search. **TASK EXPANDED** into 5 sub-tasks to manage implementation complexity. JSVectorStorage components removed, implementing pure FAISS solution.
 
-  - [x] **ID 11.1: Environment Setup & Toolchain Configuration** (Priority: critical) ✅ **COMPLETED**
+  - [ ] **ID 11.1: FAISS Environment & Dependency Resolution** (Priority: critical)
   > Dependencies: 11
-  > Configure CentOS7 compatible toolchain to support native binding compilation for FAISS and SQLite3, enabling enhanced performance while maintaining JavaScript fallbacks.
-  > **Status**: Environment validated, GCC 10.3.0 + SQLite 3.42.0 toolchain operational, CXXABI_1.3.8+ confirmed available
-  
-  - [x] **ID 11.2: SQLite3 Native Binding Implementation** (Priority: high)
+  > 解決FAISS native binding的環境依賴問題，特別是GLIBC 2.27需求和faiss-node包的兼容性。建立可工作的FAISS環境。
+
+  - [ ] **ID 11.2: Core FAISS Implementation** (Priority: high)
   > Dependencies: 11.1
-  > Compile and implement SQLite3 native bindings using compatible CentOS7 toolchain, enabling high-performance metadata operations while maintaining JavaScript fallback compatibility.
-  
-  - [ ] **ID 11.3: FAISS Native Binding Investigation** (Priority: medium)  
-  > Dependencies: 11.1
-  > Investigate and attempt to resolve FAISS native binding compilation issues, specifically addressing the GLIBC 2.27 dependency requirement that exceeds current system capabilities.
-  
-  - [ ] **ID 11.4: Hybrid Vector Storage Implementation** (Priority: high)
-  > Dependencies: 11.2, 11.3  
-  > Implement hybrid vector storage architecture combining the best available components: native SQLite3 for metadata (high performance) + JavaScript vectors for similarity search (reliable compatibility).
-  
-  - [ ] **ID 11.5: Environment Testing & Validation** (Priority: high)
-  > Dependencies: 11.4
-  > Comprehensive testing and validation of the hybrid vector storage implementation across different environment configurations, ensuring robust operation and proper fallback behavior.
+  > 實現FAISSVectorStorage核心類，包含基本的向量添加、搜索和管理功能。提供基礎FAISS操作接口。
+
+  - [ ] **ID 11.3: Multiple Index Types Support** (Priority: high)
+  > Dependencies: 11.2
+  > 實現多種FAISS索引類型支持 (IndexFlatIP, IndexIVF, IndexHNSW) 和自動索引選擇。優化不同規模數據集的性能。
+
+  - [ ] **ID 11.4: Performance Testing & Benchmarking** (Priority: medium)
+  > Dependencies: 11.3
+  > 建立性能測試框架，對比FAISS vs JSVectorStorage性能，驗證<5ms搜索目標。提供性能基準數據。
+
+  - [ ] **ID 11.5: System Integration & Cleanup** (Priority: medium)
+  > Dependencies: 11.2
+  > 完成系統集成，更新exports，清理舊代碼引用，確保端到端功能。完成FAISS向量存儲系統部署。
 
 - [ ] **ID 12: Implement cosine similarity search algorithm** (Priority: medium)
 > Dependencies: 11

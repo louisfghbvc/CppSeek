@@ -12,9 +12,9 @@
 ### AI/ML Technologies
 - **Nvidia NIM API**: Cloud-hosted embedding service (llama-3.2-nv-embedqa-1b-v2) ✅ **IMPLEMENTED**
 - **OpenAI SDK**: API client for NIM compatibility ✅ **IMPLEMENTED** 
-- **FAISS**: Vector similarity search and indexing ⏳ **PENDING**
-- **SQLite**: Metadata storage and caching ⏳ **PENDING**
-- **Cosine Similarity**: Vector comparison algorithm ⏳ **PENDING**
+- **FAISS**: Vector similarity search and indexing 🔄 **IN IMPLEMENTATION** (5 sub-tasks created)
+- **SQLite**: Metadata storage and caching ✅ **AVAILABLE** (from previous sub-task work)
+- **Cosine Similarity**: Vector comparison algorithm 🔄 **INTEGRATED WITH FAISS**
 - **@xenova/transformers**: Llama-compatible tokenization ✅ **IMPLEMENTED**
 - **dotenv**: Secure environment configuration ✅ **IMPLEMENTED**
 
@@ -113,11 +113,13 @@ code --version  # VS Code 1.74.0 or higher
 - **Tokenization**: @xenova/transformers for accurate token counting ✅ **IMPLEMENTED**
 
 ### Storage Strategy
-**Decision**: Local-first with cloud backup option
-- **Vector Storage**: FAISS for fast similarity search
-- **Metadata**: SQLite for file paths and context
-- **Cache**: In-memory LRU for frequently accessed data
-- **Backup**: Optional cloud sync for teams
+**Decision**: High-performance FAISS native implementation ✅ **ARCHITECTURE FINALIZED**
+- **Vector Storage**: Native FAISS with multiple index types (Flat, IVF, HNSW)
+- **Index Selection**: Automatic selection based on dataset size (<1K→Flat, 1K-100K→IVF, >100K→HNSW)
+- **Metadata**: SQLite for file paths, line numbers, and chunk context
+- **Performance Target**: <5ms search latency for large datasets (50K+ vectors)
+- **Implementation Status**: 5 sub-tasks created for systematic implementation
+- **Environment**: GLIBC dependency resolution and faiss-node compatibility in progress
 
 ### Processing Pipeline
 **Decision**: Asynchronous processing with worker threads

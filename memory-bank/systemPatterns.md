@@ -91,11 +91,13 @@ graph LR
 - **Trade-offs**: Requires internet connectivity and API costs (offset by development simplicity)
 
 ### Vector Database Selection
-**Decision**: Start with FAISS for local storage
-- **Rationale**: High performance, no external dependencies
-- **Progression**: SQLite for metadata, potential Chroma upgrade
-- **Benefits**: Fast similarity search, local control
-- **Trade-offs**: Limited distributed capabilities
+**Decision**: FAISS native implementation for high-performance search ✅ **FINAL DECISION**
+- **Rationale**: User preference for performance and scalability over simplicity
+- **Implementation**: Native FAISS bindings with multiple index types (Flat, IVF, HNSW)
+- **Performance Targets**: <5ms search latency for large datasets (50K+ vectors)
+- **Benefits**: Sub-linear search complexity O(log n), industry-standard technology
+- **Trade-offs**: Environment complexity (GLIBC dependencies) vs performance gains
+- **Metadata Storage**: SQLite for chunk metadata and file tracking
 
 ### RAG Architecture Pattern
 ```mermaid
