@@ -111,7 +111,7 @@ export class NIMEmbeddingService {
   }
 
   /**
-   * Generates a single embedding for the given text
+   * Generates embeddings for a single text input
    */
   async generateEmbedding(text: string): Promise<EmbeddingResponse> {
     if (!text || text.trim().length === 0) {
@@ -120,10 +120,12 @@ export class NIMEmbeddingService {
 
     const startTime = Date.now();
     
-    try {
-      const response = await this.executeWithRetry(async () => {
+    const response = await this.executeWithRetry(async () => {
+      this.outputChannel.appendLine(`Generating embedding for text: ${text.substring(0, 100)}...`);
+      
+      const result = await this.executeWithRateLimit(async () => {
         return await this.client.embeddings.create({
-          input: [text],
+          input: text,
           model: this.config.model,
           encoding_format: "float",
           input_type: "query",
@@ -134,18 +136,21 @@ export class NIMEmbeddingService {
       const duration = Date.now() - startTime;
       this.outputChannel.appendLine(`Generated embedding in ${duration}ms`);
 
+      // Ensure result is defined before accessing its properties
+      if (!result || !result.data || !result.data[0]) {
+        throw new Error('Invalid response from embeddings API');
+      }
+
       return {
-        embedding: response.data[0].embedding,
+        embedding: result.data[0].embedding,
         usage: {
-          prompt_tokens: response.usage?.prompt_tokens || 0,
-          total_tokens: response.usage?.total_tokens || 0
+          prompt_tokens: result.usage?.prompt_tokens || 0,
+          total_tokens: result.usage?.total_tokens || 0
         }
       };
-    } catch (error) {
-      const nimError = this.parseError(error);
-      this.outputChannel.appendLine(`Embedding generation failed: ${nimError.message}`);
-      throw nimError;
-    }
+    });
+
+    return response;
   }
 
   /**
@@ -221,6 +226,7 @@ export class NIMEmbeddingService {
    */
   private async executeWithRetry<T>(fn: () => Promise<T>): Promise<T> {
     let lastError: any;
+    let lastParsedError: NIMServiceError | null = null;
     
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
@@ -228,6 +234,7 @@ export class NIMEmbeddingService {
       } catch (error) {
         lastError = error;
         const nimError = this.parseError(error);
+        lastParsedError = nimError;
         
         if (!nimError.retryable || attempt === this.config.retryAttempts) {
           throw nimError;
@@ -239,7 +246,8 @@ export class NIMEmbeddingService {
       }
     }
     
-    throw this.parseError(lastError);
+    // Return the last parsed error instead of parsing again
+    throw lastParsedError || this.parseError(lastError);
   }
 
   /**
@@ -282,6 +290,13 @@ export class NIMEmbeddingService {
    * Parses and categorizes API errors
    */
   private parseError(error: any): NIMServiceError {
+    // If error is already a parsed NIMServiceError, return it as-is
+    if (error && typeof error === 'object' && error.type && error.retryable !== undefined) {
+      return error as NIMServiceError;
+    }
+    
+
+    
     // Handle network errors
     if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
       return {
