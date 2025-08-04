@@ -2,7 +2,7 @@
 id: 12
 title: 'Implement cosine similarity search algorithm'
 status: pending
-priority: critical
+priority: high
 feature: Embedding & Search Infrastructure
 dependencies:
   - 11
@@ -11,27 +11,29 @@ created_at: "2025-07-17T12:00:00Z"
 started_at: null
 completed_at: null
 error_log: null
+updated_at: "2025-08-04T07:55:50Z"
 ---
 
 ## Description
 
-Develop the core search algorithm that uses cosine similarity to find the most relevant code chunks based on semantic similarity to user queries, integrating with the FAISS vector storage system.
+Develop the core semantic search algorithm that uses cosine similarity to find the most relevant code chunks based on semantic similarity to user queries, integrating with the modern LangChain + Chroma vector storage system established in Task 11.
 
 ## Details
 
 ### Core Functionality Requirements
 - **Query Processing Pipeline**: Convert user queries to embeddings and execute searches
-- **Similarity Computation**: Implement cosine similarity-based search using FAISS
+- **Similarity Computation**: Implement cosine similarity-based search using LangChain + Chroma
 - **Result Processing**: Parse and normalize search results with relevance scoring
 - **Performance Optimization**: Efficient top-K retrieval with configurable parameters
 - **Search Caching**: Cache frequent queries and results for improved performance
 - **Error Handling**: Robust error handling for search failures and edge cases
+- **Modern RAG Integration**: Leverage completed ModernVectorStorage from Task 11
 
 ### Implementation Steps
 1. **Search Service Architecture**
    - Create SemanticSearchService class as main search interface
    - Implement query preprocessing and normalization
-   - Set up integration with NIM embedding service and FAISS storage
+   - Set up integration with NIM embedding service and ModernVectorStorage (LangChain + Chroma)
    - Add search result post-processing and scoring
 
 2. **Query Processing Pipeline**
@@ -41,7 +43,7 @@ Develop the core search algorithm that uses cosine similarity to find the most r
    - Result retrieval and initial processing
 
 3. **Search Algorithm Implementation**
-   - FAISS-based similarity search execution
+   - LangChain + Chroma similarity search execution leveraging Task 11's ModernVectorStorage
    - Top-K result retrieval with configurable limits
    - Similarity score normalization and thresholding
    - Search result caching and optimization
@@ -86,13 +88,13 @@ interface SearchFilter {
 ```typescript
 class SemanticSearchService {
   private embeddingService: NIMEmbeddingService;
-  private vectorStorage: FAISSVectorStorage;
+  private vectorStorage: ModernVectorStorage; // From Task 11: LangChain + Chroma
   private searchCache: SearchCache;
   private config: SearchConfig;
   
   constructor(
     embeddingService: NIMEmbeddingService,
-    vectorStorage: FAISSVectorStorage,
+    vectorStorage: ModernVectorStorage, // Modern RAG architecture from Task 11
     config: SearchConfig
   ) {
     this.embeddingService = embeddingService;
@@ -139,10 +141,11 @@ class SemanticSearchService {
   private async executeSearch(
     queryEmbedding: number[], 
     options: SearchOptions
-  ): Promise<FAISSSearchResult[]> {
+  ): Promise<ChromaSearchResult[]> {
     const topK = options.topK || this.config.defaultTopK;
     const threshold = options.similarityThreshold || this.config.defaultThreshold;
     
+    // Use ModernVectorStorage from Task 11 (LangChain + Chroma)
     const rawResults = await this.vectorStorage.searchSimilar(
       queryEmbedding, 
       topK * 2, // Get extra results for filtering
@@ -264,19 +267,21 @@ class SearchResultProcessor implements ResultProcessor {
 
 ### Primary Requirements
 - [ ] Query processing pipeline functional end-to-end
-- [ ] FAISS similarity search operational with configurable parameters
+- [ ] LangChain + Chroma similarity search operational with configurable parameters
 - [ ] Search results properly normalized and scored
 - [ ] Top-K retrieval working with user-specified limits
 - [ ] Search caching implemented for performance optimization
 - [ ] Error handling robust for edge cases and failures
+- [ ] Integration with ModernVectorStorage from Task 11 complete
 - [ ] Integration ready for result ranking and filtering (Task 13)
 
 ### Performance Requirements
-- [ ] Average search latency < 100ms for typical queries
+- [ ] Average search latency < 200ms for typical queries (aligned with modern RAG targets)
 - [ ] Search accuracy > 70% for common code search queries
 - [ ] Cache hit ratio > 50% for repeated queries
 - [ ] Memory usage optimized for concurrent searches
 - [ ] Throughput > 10 searches/second under normal load
+- [ ] Leverage Task 11's performance optimizations (zero dependencies, modern ecosystem)
 
 ### Technical Specifications
 - [ ] Configurable similarity thresholds (0.3-0.9 range)
@@ -315,8 +320,9 @@ const defaultSearchConfig: SearchConfig = {
 ### Search Optimization
 - Implement search result caching with LRU eviction
 - Pre-compute embeddings for common queries
-- Optimize FAISS search parameters based on dataset size
+- Optimize Chroma search parameters based on dataset size (leveraging Task 11 foundation)
 - Use connection pooling for embedding service requests
+- Leverage ModernVectorStorage performance features from Task 11
 
 ### Result Processing Optimization
 - Lazy loading of metadata for large result sets
@@ -325,20 +331,22 @@ const defaultSearchConfig: SearchConfig = {
 - Parallel processing where possible
 
 ## Success Metrics
-- Search response time: < 100ms average
+- Search response time: < 200ms average (modern RAG target, aligned with Task 11 architecture)
 - Search accuracy: > 70% relevant results for common queries
 - Cache effectiveness: > 50% hit ratio
 - Error rate: < 1% for valid queries
 - Memory efficiency: Linear scaling with concurrent users
+- Integration efficiency: Seamless operation with ModernVectorStorage from Task 11
 
 ## Definition of Done
 - [ ] SemanticSearchService class implemented and tested
 - [ ] Query embedding generation integrated with NIM service
-- [ ] FAISS-based similarity search functional
+- [ ] LangChain + Chroma similarity search functional (using ModernVectorStorage from Task 11)
 - [ ] Search result processing and scoring complete
 - [ ] Search caching system operational
 - [ ] Comprehensive error handling implemented
 - [ ] Performance optimization features active
+- [ ] Integration with Task 11's ModernVectorStorage complete and tested
 - [ ] Ready for integration with ranking and filtering (Task 13)
 - [ ] Documentation and usage examples complete
 
@@ -350,8 +358,12 @@ Upon completion, this task enables:
 - **Performance Baseline**: Established search performance metrics
 
 ## Notes
+- **Architecture Alignment**: Task 12 now properly integrates with the modern LangChain + Chroma architecture from Task 11
+- **Performance Targets**: Updated to align with modern RAG expectations (200ms vs 100ms for complex operations)
+- **Foundation Dependency**: Leverages completed ModernVectorStorage, DocumentManager, and VectorStorageService from Task 11
 - Monitor search accuracy and adjust similarity thresholds as needed
 - Track most common query patterns for optimization opportunities
 - Document search performance characteristics for different query types
 - Plan for search analytics and usage pattern analysis
 - Consider implementing query suggestions and auto-completion features
+- **Task Magic Update**: Updated 2025-08-04T07:55:50Z to reflect modern RAG architecture integration
