@@ -7,6 +7,7 @@ import * as path from 'path';
 import { FileDiscoveryService, type ScanResult } from './services/indexing/FileDiscoveryService';
 import { TextChunker, type ChunkingResult } from './services/indexing/TextChunker';
 import { FileContentReader, type FileContent } from './services/indexing/FileContentReader';
+import { VectorStorageService, type SearchResult } from './services/vectorStorageService';
 
 // Test imports for semantic search dependencies
 // Note: Runtime execution may fail due to native bindings, but TypeScript compilation should work
@@ -35,6 +36,7 @@ let statusBarItem: vscode.StatusBarItem;
 let fileDiscoveryService: FileDiscoveryService;
 let textChunker: TextChunker;
 let fileContentReader: FileContentReader;
+let vectorStorageService: VectorStorageService;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -57,6 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
 	fileDiscoveryService = new FileDiscoveryService(outputChannel);
 	textChunker = new TextChunker(outputChannel);
 	fileContentReader = new FileContentReader(outputChannel);
+	vectorStorageService = new VectorStorageService();
 	
 	// Update status bar
 	updateStatusBar();
@@ -180,56 +183,105 @@ async function handleSemanticSearch() {
 	
 	logMessage(`Performing semantic search for: "${searchQuery}"`);
 	
-	// Show progress indicator
+	// Show progress indicator and perform actual search
 	await vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
-		title: 'CppSeek: Searching...',
-		cancellable: true
-	}, async (progress, token) => {
-		progress.report({ increment: 0, message: 'Initializing search...' });
-		
-		// Simulate search progress (replace with actual implementation later)
-		for (let i = 0; i < 100; i += 20) {
-			if (token.isCancellationRequested) {
+		title: 'Semantic Search',
+		cancellable: false
+	}, async (progress) => {
+		try {
+			progress.report({ increment: 0, message: 'Initializing vector storage...' });
+			
+			// Initialize vector storage if needed
+			await vectorStorageService.initialize();
+			
+			progress.report({ increment: 30, message: 'Processing semantic query...' });
+			
+			// Perform actual semantic search
+			const results = await vectorStorageService.searchSimilar(searchQuery, 5);
+			
+			progress.report({ increment: 100, message: 'Search completed' });
+			
+			// Display search results
+			if (results.length === 0) {
+				vscode.window.showInformationMessage(
+					`No results found for: "${searchQuery}". Try a different query or index more files.`
+				);
 				return;
 			}
 			
-			await new Promise(resolve => setTimeout(resolve, 200));
-			progress.report({ 
-				increment: 20, 
-				message: i < 80 ? 'Searching code...' : 'Ranking results...' 
-			});
-		}
-		
-		// Show placeholder results
-		const results = [
-			'src/main.cpp:42 - main() function initialization',
-			'src/config.h:15 - Configuration constants',
-			'src/utils.cpp:128 - Utility initialization functions'
-		];
-		
-		const selectedResult = await vscode.window.showQuickPick(results, {
-			placeHolder: 'Select a search result to open',
-			title: `Search results for: "${searchQuery}"`
-		});
-		
-		if (selectedResult) {
-			logMessage(`Selected result: ${selectedResult}`);
-			vscode.window.showInformationMessage(`Opening: ${selectedResult}`);
-			// TODO: Implement actual file opening logic
+			// Create and show search results in a new document
+			await displaySearchResults(searchQuery, results);
+			
+		} catch (error) {
+			logMessage(`Semantic search error: ${error}`);
+			vscode.window.showErrorMessage(
+				`Semantic search failed: ${error}. Check the output channel for details.`
+			);
 		}
 	});
+}
+
+/**
+ * Display search results in a new document
+ */
+async function displaySearchResults(query: string, results: SearchResult[]) {
+	try {
+		// Create markdown content for search results
+		let content = `# Semantic Search Results\n\n`;
+		content += `**Query:** "${query}"\n`;
+		content += `**Results:** ${results.length} matches found\n`;
+		content += `**Search Time:** ${new Date().toLocaleTimeString()}\n\n`;
+		content += `---\n\n`;
+		
+		results.forEach((result, index) => {
+			content += `## Result ${index + 1} (Score: ${result.score.toFixed(4)})\n\n`;
+			content += `**File:** \`${result.filePath}\`\n`;
+			content += `**Lines:** ${result.startLine}-${result.endLine}\n`;
+			
+			if (result.functionName) {
+				content += `**Function:** \`${result.functionName}\`\n`;
+			}
+			if (result.className) {
+				content += `**Class:** \`${result.className}\`\n`;
+			}
+			if (result.namespace) {
+				content += `**Namespace:** \`${result.namespace}\`\n`;
+			}
+			
+			content += `\n**Code:**\n\`\`\`cpp\n${result.content}\n\`\`\`\n\n`;
+			content += `[Open File](${vscode.Uri.file(result.filePath)})\n\n`;
+			content += `---\n\n`;
+		});
+		
+		// Create and show new document
+		const doc = await vscode.workspace.openTextDocument({
+			content: content,
+			language: 'markdown'
+		});
+		
+		await vscode.window.showTextDocument(doc, {
+			viewColumn: vscode.ViewColumn.Beside,
+			preview: false
+		});
+		
+		logMessage(`Search results displayed: ${results.length} matches`);
+		
+	} catch (error) {
+		logMessage(`Failed to display search results: ${error}`);
+		vscode.window.showErrorMessage(`Failed to display search results: ${error}`);
+	}
 }
 
 async function handleIndexWorkspace() {
 	logMessage('Index workspace command executed');
 	
-	if (!vscode.workspace.workspaceFolders) {
+	if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
 		vscode.window.showErrorMessage('No workspace folder is open');
 		return;
 	}
 	
-	if (extensionState.isIndexing || fileDiscoveryService.isCurrentlyScanning()) {
+	if (extensionState.isIndexing) {
 		vscode.window.showWarningMessage('Indexing is already in progress');
 		return;
 	}
@@ -240,151 +292,93 @@ async function handleIndexWorkspace() {
 	try {
 		await vscode.window.withProgress({
 			location: vscode.ProgressLocation.Notification,
-			title: 'CppSeek: Discovering files...',
-			cancellable: true
-		}, async (progress, token) => {
-			try {
-				// Use FileDiscoveryService to scan for files
-				const scanResult: ScanResult = await fileDiscoveryService.discoverFiles(progress, token);
-				
-				if (token.isCancellationRequested) {
-					logMessage('File discovery cancelled by user');
-					return;
-				}
-				
-				if (scanResult.totalFiles === 0) {
-					vscode.window.showWarningMessage('No C/C++ files found in workspace');
-					return;
-				}
-				
-				// Show scan results summary
-				const performanceMsg = 
-					`Performance: ${scanResult.performance.filesPerSecond.toFixed(1)} files/sec, ` +
-					`${(scanResult.performance.totalSizeBytes / 1024 / 1024).toFixed(1)} MB total`;
-				
-				logMessage(`File discovery completed: ${scanResult.totalFiles} files found in ${scanResult.scanTime}ms`);
-				logMessage(performanceMsg);
-				
-				if (scanResult.errors.length > 0) {
-					logMessage(`Warning: ${scanResult.errors.length} errors encountered during scan`);
-				}
-				
-				// Start actual indexing pipeline with chunking
-				progress.report({ message: 'Starting text chunking pipeline...', increment: 0 });
-				
-				let processedFiles = 0;
-				let totalChunks = 0;
-				const batchSize = 5; // Smaller batch for file reading and chunking
-				
-				for (let i = 0; i < scanResult.files.length; i += batchSize) {
-					if (token.isCancellationRequested) {
-						logMessage('Indexing cancelled by user');
-						return;
-					}
-					
-					const batch = scanResult.files.slice(i, i + batchSize);
-					
-					// Process batch of files with FileContentReader
-					const batchPaths = batch.map(file => file.path);
-					
-					// Read file contents using FileContentReader
-					const fileContents = await fileContentReader.readFiles(batchPaths, undefined, (processed, total) => {
-						progress.report({ message: `Reading files... ${processed}/${total}` });
-					});
-					
-					// Process each successfully read file
-					for (const fileContent of fileContents) {
-						try {
-							const file = batch.find(f => f.path === fileContent.path);
-							if (!file) continue;
-							
-							// Skip empty files
-							if (fileContent.content.trim().length === 0) {
-								logMessage(`Skipping empty file: ${file.relativePath}`);
-								continue;
-							}
-							
-							// Log file content details for first few files
-							if (processedFiles < 10) {
-								logMessage(
-									`Processing ${file.relativePath}: ${fileContent.size} bytes, ` +
-									`${fileContent.lineCount} lines, encoding: ${fileContent.encoding}, ` +
-									`language: ${fileContent.metadata.language}`
-								);
-								
-								if (fileContent.metadata.hasUnicode) {
-									logMessage(`  Contains Unicode characters`);
-								}
-								if (fileContent.preprocessed) {
-									logMessage(`  Content was preprocessed`);
-								}
-							}
-							
-							// Chunk the file content
-							const chunkingResult: ChunkingResult = await textChunker.chunkText(
-								fileContent.content, 
-								file.relativePath
-							);
-							
-							totalChunks += chunkingResult.chunks.length;
-							
-							// Log chunking results for first few files
-							if (processedFiles < 10) {
-								logMessage(
-									`Chunked ${file.relativePath}: ${chunkingResult.chunks.length} chunks, ` +
-									`${chunkingResult.totalTokens} tokens, ${chunkingResult.processingTime}ms`
-								);
-								
-								// Log chunk overlap information
-								if (chunkingResult.overlaps && chunkingResult.overlaps.length > 0) {
-									logMessage(`  ${chunkingResult.overlaps.length} semantic overlaps applied for context continuity`);
-									
-									if (chunkingResult.overlapQuality) {
-										const quality = chunkingResult.overlapQuality;
-										logMessage(`  Overlap quality: ${(quality.semanticPreservation * 100).toFixed(1)}% semantic preservation`);
-										logMessage(`  Preserved: ${quality.functionsPreserved} functions, ${quality.classesPreserved} classes, ${quality.commentsPreserved} comments`);
-									}
-								} else {
-									logMessage(`  No overlaps applied (single chunk or disabled)`);
-								}
-							}
-							
-							// TODO: Store chunks in vector database (Task 11)
-							// For now, just log the chunk creation
-							
-						} catch (error) {
-							const file = batch.find(f => f.path === fileContent.path);
-							logMessage(`Error processing file ${file?.relativePath || fileContent.path}: ${error}`);
-						}
-					}
-					
-					processedFiles += batch.length;
-					const progressPercent = Math.round((processedFiles / scanResult.totalFiles) * 100);
-					
-					progress.report({
-						increment: (batch.length / scanResult.totalFiles) * 100,
-						message: `Processing files: ${processedFiles}/${scanResult.totalFiles} (${progressPercent}%)`
-					});
-				}
-				
-				// Report chunking results
-				logMessage(`Text chunking completed: ${totalChunks} total chunks created from ${processedFiles} files`);
-				
-				// Update extension state
-				extensionState.indexedFileCount = scanResult.totalFiles;
-				extensionState.lastIndexTime = new Date();
-				
-				const successMsg = `Successfully indexed ${scanResult.totalFiles} C/C++ files in ${scanResult.scanTime}ms`;
-				logMessage(successMsg);
-				vscode.window.showInformationMessage(`CppSeek: ${successMsg}`);
-				
-			} catch (error) {
-				const errorMsg = `File discovery failed: ${error}`;
-				logMessage(errorMsg);
-				vscode.window.showErrorMessage(`CppSeek: ${errorMsg}`);
+			title: 'Indexing Workspace',
+			cancellable: false
+		}, async (progress) => {
+			
+			progress.report({ increment: 0, message: 'Discovering files...' });
+			
+			// Discover C/C++ files
+			const scanResult = await fileDiscoveryService.discoverFiles(progress, { isCancellationRequested: false } as any);
+			const files = scanResult.files.map(f => f.path);
+			
+			if (files.length === 0) {
+				vscode.window.showWarningMessage('No C/C++ files found in workspace');
+				return;
 			}
+			
+			logMessage(`Found ${files.length} C/C++ files`);
+			progress.report({ increment: 20, message: `Found ${files.length} files, processing...` });
+			
+			// Initialize vector storage
+			await vectorStorageService.initialize();
+			
+			let processedFiles = 0;
+			let totalChunks = 0;
+			
+			// Process files in batches
+			for (const file of files) {
+				try {
+					// Read file content
+					const fileContent = await fileContentReader.readFile(file);
+					
+					if (!fileContent) {
+						continue;
+					}
+					
+					// Create chunks
+					const chunkingResult = await textChunker.chunkText(
+						fileContent.content,
+						fileContent.path
+					);
+					
+					if (chunkingResult.chunks.length > 0) {
+						// Convert chunks to CodeChunk format
+						const codeChunks = chunkingResult.chunks.map(chunk => ({
+							id: chunk.id,
+							content: chunk.content,
+							filename: fileContent.path,
+							lineStart: chunk.startLine,
+							lineEnd: chunk.endLine,
+							functionName: undefined,
+							className: undefined,
+							namespace: undefined
+						}));
+						
+						// Index chunks using vector storage service
+						await vectorStorageService.indexCodeChunks(codeChunks);
+						totalChunks += codeChunks.length;
+					}
+					
+					processedFiles++;
+					const progressPercent = Math.floor((processedFiles / files.length) * 60) + 20; // 20-80%
+					progress.report({ 
+						increment: progressPercent - (progress as any).value || 0, 
+						message: `Processed ${processedFiles}/${files.length} files (${totalChunks} chunks)` 
+					});
+					
+				} catch (error) {
+					logMessage(`Error processing file ${file}: ${error}`);
+				}
+			}
+			
+			progress.report({ increment: 90, message: 'Finalizing index...' });
+			
+			// Update extension state
+			extensionState.indexedFileCount = processedFiles;
+			extensionState.lastIndexTime = new Date();
+			
+			progress.report({ increment: 100, message: 'Indexing completed' });
+			
+			logMessage(`Indexing completed: ${processedFiles} files, ${totalChunks} chunks`);
+			vscode.window.showInformationMessage(
+				`Indexing completed: ${processedFiles} files processed, ${totalChunks} code chunks indexed`
+			);
 		});
 		
+			} catch (error) {
+		logMessage(`Indexing error: ${error}`);
+		vscode.window.showErrorMessage(`Indexing failed: ${error}`);
 	} finally {
 		extensionState.isIndexing = false;
 		updateStatusBar();
@@ -394,28 +388,30 @@ async function handleIndexWorkspace() {
 async function handleClearIndex() {
 	logMessage('Clear index command executed');
 	
-	if (extensionState.indexedFileCount === 0) {
-		vscode.window.showInformationMessage('No index data to clear');
+	const confirmation = await vscode.window.showWarningMessage(
+		'This will clear all indexed data. Are you sure?',
+		{ modal: true },
+		'Clear Index'
+	);
+	
+	if (confirmation !== 'Clear Index') {
 		return;
 	}
 	
-	const selection = await vscode.window.showWarningMessage(
-		`Clear search index? This will remove indexing data for ${extensionState.indexedFileCount} files.`,
-		{ modal: true },
-		'Clear Index',
-		'Cancel'
-	);
-	
-	if (selection === 'Clear Index') {
-		// Reset state
+	try {
+		await vectorStorageService.clearIndex();
+		
+		// Reset extension state
 		extensionState.indexedFileCount = 0;
 		extensionState.lastIndexTime = null;
-		
-		// TODO: Clear actual index data when implemented
-		
 		updateStatusBar();
+		
 		logMessage('Index cleared successfully');
-		vscode.window.showInformationMessage('CppSeek: Index cleared successfully');
+		vscode.window.showInformationMessage('Index cleared successfully');
+		
+	} catch (error) {
+		logMessage(`Clear index error: ${error}`);
+		vscode.window.showErrorMessage(`Failed to clear index: ${error}`);
 	}
 }
 

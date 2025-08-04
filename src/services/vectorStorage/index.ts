@@ -7,6 +7,23 @@
 export * from './types';
 export * from './modernVectorStorage';
 
+// Export document management system
+export { 
+  DocumentConverter,
+  DocumentManager,
+  IncrementalUpdater
+} from '../documents';
+
+export type {
+  CodeChunk as LegacyCodeChunk,
+  LangChainDocument,
+  ConversionStats,
+  DocumentResult,
+  DocumentQueryOptions,
+  FileChangeSet,
+  IncrementalUpdateResult
+} from '../documents';
+
 // Modern storage information
 export const getStorageInfo = () => {
   return {
@@ -17,7 +34,9 @@ export const getStorageInfo = () => {
       chroma: true,
       nvidianim: true,
       documentBased: true,
-      semanticSearch: true
+      semanticSearch: true,
+      documentManagement: true,
+      incrementalUpdates: true
     }
   };
 }; 
