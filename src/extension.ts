@@ -8,6 +8,8 @@ import { FileDiscoveryService, type ScanResult } from './services/indexing/FileD
 import { TextChunker, type ChunkingResult } from './services/indexing/TextChunker';
 import { FileContentReader, type FileContent } from './services/indexing/FileContentReader';
 import { VectorStorageService, type SearchResult } from './services/vectorStorageService';
+import { SemanticSearchService, type EnhancedSearchResult, type SearchOptions } from './services/semanticSearchService';
+import { createNIMServiceFromEnv } from './services/nimEmbeddingService';
 
 // Test imports for semantic search dependencies
 // Note: Runtime execution may fail due to native bindings, but TypeScript compilation should work
@@ -37,6 +39,7 @@ let fileDiscoveryService: FileDiscoveryService;
 let textChunker: TextChunker;
 let fileContentReader: FileContentReader;
 let vectorStorageService: VectorStorageService;
+let semanticSearchService: SemanticSearchService;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -60,6 +63,16 @@ export function activate(context: vscode.ExtensionContext) {
 	textChunker = new TextChunker(outputChannel);
 	fileContentReader = new FileContentReader(outputChannel);
 	vectorStorageService = new VectorStorageService();
+	
+	// Initialize semantic search service (async initialization will be handled when first used)
+	try {
+		const nimService = createNIMServiceFromEnv();
+		semanticSearchService = new SemanticSearchService(vectorStorageService, nimService);
+		logMessage('SemanticSearchService initialized successfully');
+	} catch (error) {
+		logMessage(`Warning: SemanticSearchService initialization failed: ${error}`);
+		// Fall back to direct vector storage service if needed
+	}
 	
 	// Update status bar
 	updateStatusBar();
@@ -139,12 +152,38 @@ function registerCommands(context: vscode.ExtensionContext) {
 		}
 	);
 
+	// Register search statistics command
+	const searchStatsDisposable = vscode.commands.registerCommand(
+		'cppseek.searchStats',
+		async () => {
+			try {
+				await handleSearchStats();
+			} catch (error) {
+				handleError('searchStats', error);
+			}
+		}
+	);
+
+	// Register clear search cache command
+	const clearCacheDisposable = vscode.commands.registerCommand(
+		'cppseek.clearSearchCache',
+		async () => {
+			try {
+				await handleClearSearchCache();
+			} catch (error) {
+				handleError('clearSearchCache', error);
+			}
+		}
+	);
+
 	// Add all disposables to context
 	context.subscriptions.push(
 		semanticSearchDisposable,
 		indexWorkspaceDisposable,
 		clearIndexDisposable,
-		showSettingsDisposable
+		showSettingsDisposable,
+		searchStatsDisposable,
+		clearCacheDisposable
 	);
 }
 
@@ -190,15 +229,28 @@ async function handleSemanticSearch() {
 		cancellable: false
 	}, async (progress) => {
 		try {
-			progress.report({ increment: 0, message: 'Initializing vector storage...' });
+			progress.report({ increment: 0, message: 'Initializing search services...' });
 			
 			// Initialize vector storage if needed
 			await vectorStorageService.initialize();
 			
 			progress.report({ increment: 30, message: 'Processing semantic query...' });
 			
-			// Perform actual semantic search
-			const results = await vectorStorageService.searchSimilar(searchQuery, 5);
+			// Use SemanticSearchService if available, otherwise fall back to VectorStorageService
+			let results: EnhancedSearchResult[] | SearchResult[];
+			if (semanticSearchService) {
+				const searchOptions: SearchOptions = {
+					topK: 10,
+					similarityThreshold: 0.3,
+					includeContext: true,
+					cacheResults: true,
+					enableQueryExpansion: true
+				};
+				results = await semanticSearchService.search(searchQuery, searchOptions);
+			} else {
+				logMessage('Falling back to VectorStorageService for search');
+				results = await vectorStorageService.searchSimilar(searchQuery, 5);
+			}
 			
 			progress.report({ increment: 100, message: 'Search completed' });
 			
@@ -225,7 +277,7 @@ async function handleSemanticSearch() {
 /**
  * Display search results in a new document
  */
-async function displaySearchResults(query: string, results: SearchResult[]) {
+async function displaySearchResults(query: string, results: SearchResult[] | EnhancedSearchResult[]) {
 	try {
 		// Create markdown content for search results
 		let content = `# Semantic Search Results\n\n`;
@@ -235,9 +287,17 @@ async function displaySearchResults(query: string, results: SearchResult[]) {
 		content += `---\n\n`;
 		
 		results.forEach((result, index) => {
-			content += `## Result ${index + 1} (Score: ${result.score.toFixed(4)})\n\n`;
+			// Handle both SearchResult and EnhancedSearchResult
+			const score = (result as EnhancedSearchResult).similarity || (result as SearchResult).score;
+			const contextSnippet = (result as EnhancedSearchResult).contextSnippet;
+			
+			content += `## Result ${index + 1} (Score: ${score.toFixed(4)})\n\n`;
 			content += `**File:** \`${result.filePath}\`\n`;
 			content += `**Lines:** ${result.startLine}-${result.endLine}\n`;
+			
+			if (contextSnippet) {
+				content += `**Context:** ${contextSnippet}\n`;
+			}
 			
 			if (result.functionName) {
 				content += `**Function:** \`${result.functionName}\`\n`;
@@ -247,6 +307,14 @@ async function displaySearchResults(query: string, results: SearchResult[]) {
 			}
 			if (result.namespace) {
 				content += `**Namespace:** \`${result.namespace}\`\n`;
+			}
+			
+			// Show relevance factors for enhanced results
+			const enhancedResult = result as EnhancedSearchResult;
+			if (enhancedResult.relevanceFactors) {
+				content += `**Relevance:** Semantic: ${enhancedResult.relevanceFactors.semanticScore.toFixed(2)}, `;
+				content += `Context: ${enhancedResult.relevanceFactors.contextScore.toFixed(2)}, `;
+				content += `Recency: ${enhancedResult.relevanceFactors.recencyScore.toFixed(2)}\n`;
 			}
 			
 			content += `\n**Code:**\n\`\`\`cpp\n${result.content}\n\`\`\`\n\n`;
@@ -457,12 +525,91 @@ function handleError(command: string, error: any) {
 	vscode.window.showErrorMessage(`CppSeek: ${errorMessage}`);
 }
 
+/**
+ * Handle search statistics command
+ */
+async function handleSearchStats() {
+	logMessage('Search statistics command executed');
+	
+	if (!semanticSearchService) {
+		vscode.window.showWarningMessage('SemanticSearchService not available. Statistics cannot be displayed.');
+		return;
+	}
+	
+	try {
+		const stats = semanticSearchService.getSearchStats();
+		
+		let content = `# CppSeek Search Statistics\n\n`;
+		content += `**Total Searches:** ${stats.totalSearches}\n`;
+		content += `**Cache Hit Rate:** ${(stats.cacheHitRate * 100).toFixed(1)}%\n`;
+		content += `**Average Latency:** ${stats.averageLatency.toFixed(0)}ms\n\n`;
+		
+		if (stats.mostFrequentQueries.length > 0) {
+			content += `## Most Frequent Queries\n\n`;
+			stats.mostFrequentQueries.forEach((query, index) => {
+				content += `${index + 1}. "${query.query}" (${query.count} times)\n`;
+			});
+		} else {
+			content += `No search history available.\n`;
+		}
+		
+		// Create and show statistics document
+		const doc = await vscode.workspace.openTextDocument({
+			content: content,
+			language: 'markdown'
+		});
+		
+		await vscode.window.showTextDocument(doc, {
+			viewColumn: vscode.ViewColumn.Beside,
+			preview: true
+		});
+		
+	} catch (error) {
+		logMessage(`Search statistics error: ${error}`);
+		vscode.window.showErrorMessage(`Failed to get search statistics: ${error}`);
+	}
+}
+
+/**
+ * Handle clear search cache command
+ */
+async function handleClearSearchCache() {
+	logMessage('Clear search cache command executed');
+	
+	if (!semanticSearchService) {
+		vscode.window.showWarningMessage('SemanticSearchService not available. No cache to clear.');
+		return;
+	}
+	
+	try {
+		const selection = await vscode.window.showWarningMessage(
+			'Are you sure you want to clear the search cache?',
+			'Clear Cache',
+			'Cancel'
+		);
+		
+		if (selection === 'Clear Cache') {
+			await semanticSearchService.invalidateCache();
+			vscode.window.showInformationMessage('Search cache cleared successfully.');
+			logMessage('Search cache cleared');
+		}
+		
+	} catch (error) {
+		logMessage(`Clear search cache error: ${error}`);
+		vscode.window.showErrorMessage(`Failed to clear search cache: ${error}`);
+	}
+}
+
 // This method is called when your extension is deactivated
 export function deactivate() {
 	logMessage('CppSeek extension deactivated');
 	
 	// Clean up resources
 	extensionState.isActivated = false;
+	
+	if (semanticSearchService) {
+		semanticSearchService.dispose();
+	}
 	
 	if (outputChannel) {
 		outputChannel.dispose();

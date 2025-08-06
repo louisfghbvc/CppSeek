@@ -37,6 +37,16 @@
         "command": "cppseek.showSettings",
         "title": "CppSeek: Show Settings",
         "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.searchStats",
+        "title": "CppSeek: Search Statistics",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.clearSearchCache",
+        "title": "CppSeek: Clear Search Cache",
+        "category": "CppSeek"
       }
     ],
     "keybindings": [
