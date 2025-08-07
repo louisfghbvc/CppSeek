@@ -739,7 +739,7 @@ export class SearchResultRanker {
 
   private async calculateRankingFactors(
     result: EnhancedSearchResult,
-    query: string,
+    _query: string,
     context: SearchContext
   ): Promise<RankingFactors> {
     // Use semantic similarity from the enhanced result

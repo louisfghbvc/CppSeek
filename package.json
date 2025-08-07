@@ -47,6 +47,26 @@
         "command": "cppseek.clearSearchCache",
         "title": "CppSeek: Clear Search Cache",
         "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.navigateToNextResult",
+        "title": "CppSeek: Navigate to Next Result",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.navigateToPreviousResult",
+        "title": "CppSeek: Navigate to Previous Result",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.showNavigationHistory",
+        "title": "CppSeek: Show Navigation History",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.jumpToLine",
+        "title": "CppSeek: Jump to Line",
+        "category": "CppSeek"
       }
     ],
     "keybindings": [
@@ -55,6 +75,26 @@
         "key": "ctrl+shift+s",
         "mac": "cmd+shift+s",
         "when": "editorTextFocus && (editorLangId == cpp || editorLangId == c)"
+      },
+      {
+        "command": "cppseek.navigateToNextResult",
+        "key": "ctrl+shift+n",
+        "mac": "cmd+shift+n"
+      },
+      {
+        "command": "cppseek.navigateToPreviousResult",
+        "key": "ctrl+shift+p",
+        "mac": "cmd+shift+p"
+      },
+      {
+        "command": "cppseek.showNavigationHistory",
+        "key": "ctrl+shift+h",
+        "mac": "cmd+shift+h"
+      },
+      {
+        "command": "cppseek.jumpToLine",
+        "key": "ctrl+g",
+        "mac": "cmd+g"
       }
     ],
     "configuration": {

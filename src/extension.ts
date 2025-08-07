@@ -9,6 +9,9 @@ import { TextChunker, type ChunkingResult } from './services/indexing/TextChunke
 import { FileContentReader, type FileContent } from './services/indexing/FileContentReader';
 import { VectorStorageService, type SearchResult } from './services/vectorStorageService';
 import { SemanticSearchService, type EnhancedSearchResult, type SearchOptions } from './services/semanticSearchService';
+import { EnhancedSemanticSearchService, createEnhancedSemanticSearchService } from './services/enhancedSemanticSearchService';
+import { SearchResultsPanel } from './ui/searchResultsPanel';
+import { ResultNavigationHandler } from './ui/resultNavigationHandler';
 import { createNIMServiceFromEnv } from './services/nimEmbeddingService';
 
 // Test imports for semantic search dependencies
@@ -40,6 +43,9 @@ let textChunker: TextChunker;
 let fileContentReader: FileContentReader;
 let vectorStorageService: VectorStorageService;
 let semanticSearchService: SemanticSearchService;
+let enhancedSearchService: EnhancedSemanticSearchService;
+let searchResultsPanel: SearchResultsPanel;
+let navigationHandler: ResultNavigationHandler;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -69,6 +75,19 @@ export function activate(context: vscode.ExtensionContext) {
 		const nimService = createNIMServiceFromEnv();
 		semanticSearchService = new SemanticSearchService(vectorStorageService, nimService);
 		logMessage('SemanticSearchService initialized successfully');
+		
+		// Initialize enhanced search service with ranking
+		enhancedSearchService = createEnhancedSemanticSearchService(
+			vectorStorageService,
+			nimService
+		);
+		logMessage('EnhancedSemanticSearchService initialized successfully');
+		
+		// Initialize UI components
+		searchResultsPanel = new SearchResultsPanel(context);
+		navigationHandler = new ResultNavigationHandler();
+		logMessage('UI components initialized successfully');
+		
 	} catch (error) {
 		logMessage(`Warning: SemanticSearchService initialization failed: ${error}`);
 		// Fall back to direct vector storage service if needed
@@ -176,6 +195,82 @@ function registerCommands(context: vscode.ExtensionContext) {
 		}
 	);
 
+	// Register navigation commands
+	const navigateNextDisposable = vscode.commands.registerCommand(
+		'cppseek.navigateToNextResult',
+		async () => {
+			try {
+				if (navigationHandler) {
+					await navigationHandler.navigateToNextResult();
+				} else {
+					vscode.window.showWarningMessage('Navigation handler not available');
+				}
+			} catch (error) {
+				handleError('navigateToNextResult', error);
+			}
+		}
+	);
+
+	const navigatePrevDisposable = vscode.commands.registerCommand(
+		'cppseek.navigateToPreviousResult',
+		async () => {
+			try {
+				if (navigationHandler) {
+					await navigationHandler.navigateToPreviousResult();
+				} else {
+					vscode.window.showWarningMessage('Navigation handler not available');
+				}
+			} catch (error) {
+				handleError('navigateToPreviousResult', error);
+			}
+		}
+	);
+
+	const showNavigationHistoryDisposable = vscode.commands.registerCommand(
+		'cppseek.showNavigationHistory',
+		async () => {
+			try {
+				if (navigationHandler) {
+					await navigationHandler.showNavigationHistory();
+				} else {
+					vscode.window.showWarningMessage('Navigation handler not available');
+				}
+			} catch (error) {
+				handleError('showNavigationHistory', error);
+			}
+		}
+	);
+
+	const jumpToLineDisposable = vscode.commands.registerCommand(
+		'cppseek.jumpToLine',
+		async () => {
+			try {
+				if (navigationHandler) {
+					const lineInput = await vscode.window.showInputBox({
+						prompt: 'Enter line number to jump to',
+						placeHolder: 'Line number',
+						validateInput: (value) => {
+							const lineNum = parseInt(value);
+							if (isNaN(lineNum) || lineNum < 1) {
+								return 'Please enter a valid line number (>= 1)';
+							}
+							return undefined;
+						}
+					});
+
+					if (lineInput) {
+						const lineNumber = parseInt(lineInput);
+						await navigationHandler.jumpToLine(lineNumber);
+					}
+				} else {
+					vscode.window.showWarningMessage('Navigation handler not available');
+				}
+			} catch (error) {
+				handleError('jumpToLine', error);
+			}
+		}
+	);
+
 	// Add all disposables to context
 	context.subscriptions.push(
 		semanticSearchDisposable,
@@ -183,7 +278,11 @@ function registerCommands(context: vscode.ExtensionContext) {
 		clearIndexDisposable,
 		showSettingsDisposable,
 		searchStatsDisposable,
-		clearCacheDisposable
+		clearCacheDisposable,
+		navigateNextDisposable,
+		navigatePrevDisposable,
+		showNavigationHistoryDisposable,
+		jumpToLineDisposable
 	);
 }
 
@@ -236,9 +335,25 @@ async function handleSemanticSearch() {
 			
 			progress.report({ increment: 30, message: 'Processing semantic query...' });
 			
-			// Use SemanticSearchService if available, otherwise fall back to VectorStorageService
-			let results: EnhancedSearchResult[] | SearchResult[];
-			if (semanticSearchService) {
+			// Use EnhancedSemanticSearchService if available, otherwise fall back
+			let results: import('./services/searchResultRanker').RankedSearchResult[] | EnhancedSearchResult[] | SearchResult[];
+			let searchTime = 0;
+			const searchStartTime = Date.now();
+			
+			if (enhancedSearchService) {
+				logMessage('Using EnhancedSemanticSearchService with ranking');
+				const searchOptions = {
+					topK: 10,
+					similarityThreshold: 0.3,
+					includeContext: true,
+					cacheResults: true,
+					enableQueryExpansion: true,
+					enableRanking: true,
+					includeRankingExplanation: false
+				};
+				results = await enhancedSearchService.search(searchQuery, searchOptions);
+			} else if (semanticSearchService) {
+				logMessage('Using basic SemanticSearchService');
 				const searchOptions: SearchOptions = {
 					topK: 10,
 					similarityThreshold: 0.3,
@@ -252,6 +367,7 @@ async function handleSemanticSearch() {
 				results = await vectorStorageService.searchSimilar(searchQuery, 5);
 			}
 			
+			searchTime = Date.now() - searchStartTime;
 			progress.report({ increment: 100, message: 'Search completed' });
 			
 			// Display search results
@@ -262,8 +378,17 @@ async function handleSemanticSearch() {
 				return;
 			}
 			
-			// Create and show search results in a new document
-			await displaySearchResults(searchQuery, results);
+			// Use new presentation system if available, otherwise fall back to markdown
+			if (searchResultsPanel && enhancedSearchService && 'finalScore' in results[0]) {
+				await searchResultsPanel.displayResults(
+					results as import('./services/searchResultRanker').RankedSearchResult[],
+					searchQuery,
+					{ searchTime, rankingEnabled: true }
+				);
+			} else {
+				// Fall back to old markdown display
+				await displaySearchResults(searchQuery, results as EnhancedSearchResult[] | SearchResult[]);
+			}
 			
 		} catch (error) {
 			logMessage(`Semantic search error: ${error}`);
@@ -609,6 +734,18 @@ export function deactivate() {
 	
 	if (semanticSearchService) {
 		semanticSearchService.dispose();
+	}
+	
+	if (enhancedSearchService) {
+		enhancedSearchService.dispose();
+	}
+	
+	if (searchResultsPanel) {
+		searchResultsPanel.dispose();
+	}
+	
+	if (navigationHandler) {
+		navigationHandler.dispose();
 	}
 	
 	if (outputChannel) {
