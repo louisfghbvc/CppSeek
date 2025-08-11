@@ -1,14 +1,14 @@
 ---
 id: 15
 title: 'Add search history and bookmarks'
-status: pending
+status: inprogress
 priority: medium
 feature: Enhanced Search & UI
 dependencies:
   - 14
-assigned_agent: null
+assigned_agent: agent
 created_at: "2025-08-04T07:42:57Z"
-started_at: null
+started_at: "2025-08-08T07:45:55Z"
 completed_at: null
 error_log: null
 ---

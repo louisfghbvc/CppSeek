@@ -12,6 +12,7 @@ import { RankedSearchResult } from '../services/searchResultRanker';
 import { CodeSyntaxHighlighter, SyntaxToken } from './codeSyntaxHighlighter';
 import { ResultNavigationHandler } from './resultNavigationHandler';
 import { ResultsExporter, ExportFormat, ExportOptions } from './resultsExporter';
+import { SearchHistoryManager } from '../services/history/searchHistoryManager';
 
 export interface ResultsDisplayState {
   groupBy: 'file' | 'relevance' | 'type' | 'none';
@@ -93,6 +94,7 @@ export class SearchResultsPanel {
   private exporter: ResultsExporter;
   private context: vscode.ExtensionContext;
   private outputChannel: vscode.OutputChannel;
+  private historyManager?: SearchHistoryManager;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
@@ -112,6 +114,11 @@ export class SearchResultsPanel {
     };
 
     this.outputChannel.appendLine('🎨 SearchResultsPanel initialized');
+  }
+
+  // Enable history integration for bookmarking
+  enableHistory(historyManager: SearchHistoryManager): void {
+    this.historyManager = historyManager;
   }
 
   /**
@@ -826,6 +833,7 @@ export class SearchResultsPanel {
             ${item.isExpanded ? 'Collapse' : 'Expand'}
           </button>
           <button onclick="copyResult('${result.id}')" class="action-btn">Copy</button>
+          <button onclick="addBookmark('${result.id}')" class="action-btn">Bookmark</button>
         </div>
       </div>
     `;
@@ -968,6 +976,10 @@ export class SearchResultsPanel {
           case 'copyResult':
             await this.copyResultToClipboard(message.resultId, items);
             break;
+
+          case 'addBookmark':
+            await this.addBookmark(message.resultId, items);
+            break;
         }
       }
     );
@@ -996,6 +1008,24 @@ export class SearchResultsPanel {
     
     await vscode.env.clipboard.writeText(copyText);
     vscode.window.showInformationMessage('Result copied to clipboard');
+  }
+
+  private async addBookmark(resultId: string, items: SearchResultItem[]): Promise<void> {
+    if (!this.historyManager) {
+      vscode.window.showWarningMessage('History system not available');
+      return;
+    }
+    const item = items.find(i => i.result.id === resultId);
+    if (!item) return;
+
+    const title = await vscode.window.showInputBox({
+      prompt: 'Bookmark title',
+      value: item.result.functionName || 'Code Block'
+    });
+    if (title === undefined) return;
+
+    await this.historyManager.createBookmark(item.result, { title });
+    vscode.window.showInformationMessage('Bookmark created');
   }
 
   /**
@@ -1420,6 +1450,13 @@ export class SearchResultsPanel {
       function copyResult(resultId) {
         vscode.postMessage({
           command: 'copyResult',
+          resultId: resultId
+        });
+      }
+
+      function addBookmark(resultId) {
+        vscode.postMessage({
+          command: 'addBookmark',
           resultId: resultId
         });
       }

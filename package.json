@@ -44,6 +44,16 @@
         "category": "CppSeek"
       },
       {
+        "command": "cppseek.showSearchHistory",
+        "title": "CppSeek: Show Search History",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.exportSearchHistory",
+        "title": "CppSeek: Export Search History",
+        "category": "CppSeek"
+      },
+      {
         "command": "cppseek.clearSearchCache",
         "title": "CppSeek: Clear Search Cache",
         "category": "CppSeek"
@@ -90,6 +100,11 @@
         "command": "cppseek.showNavigationHistory",
         "key": "ctrl+shift+h",
         "mac": "cmd+shift+h"
+      },
+      {
+        "command": "cppseek.showSearchHistory",
+        "key": "ctrl+alt+h",
+        "mac": "cmd+alt+h"
       },
       {
         "command": "cppseek.jumpToLine",

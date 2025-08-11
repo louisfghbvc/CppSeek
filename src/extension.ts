@@ -11,8 +11,10 @@ import { VectorStorageService, type SearchResult } from './services/vectorStorag
 import { SemanticSearchService, type EnhancedSearchResult, type SearchOptions } from './services/semanticSearchService';
 import { EnhancedSemanticSearchService, createEnhancedSemanticSearchService } from './services/enhancedSemanticSearchService';
 import { SearchResultsPanel } from './ui/searchResultsPanel';
+import { SearchHistoryManager } from './services/history/searchHistoryManager';
 import { ResultNavigationHandler } from './ui/resultNavigationHandler';
 import { createNIMServiceFromEnv } from './services/nimEmbeddingService';
+import { HistoryPanel } from './ui/historyPanel';
 
 // Test imports for semantic search dependencies
 // Note: Runtime execution may fail due to native bindings, but TypeScript compilation should work
@@ -46,6 +48,8 @@ let semanticSearchService: SemanticSearchService;
 let enhancedSearchService: EnhancedSemanticSearchService;
 let searchResultsPanel: SearchResultsPanel;
 let navigationHandler: ResultNavigationHandler;
+let historyManager: SearchHistoryManager;
+let historyPanel: HistoryPanel | undefined;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -86,6 +90,12 @@ export function activate(context: vscode.ExtensionContext) {
 		// Initialize UI components
 		searchResultsPanel = new SearchResultsPanel(context);
 		navigationHandler = new ResultNavigationHandler();
+		historyManager = new SearchHistoryManager(context);
+		// connect history to panel (for bookmarking)
+		if (searchResultsPanel && historyManager) {
+			(searchResultsPanel as any).enableHistory?.(historyManager);
+		}
+		historyPanel = new HistoryPanel(context, historyManager);
 		logMessage('UI components initialized successfully');
 		
 	} catch (error) {
@@ -179,6 +189,44 @@ function registerCommands(context: vscode.ExtensionContext) {
 				await handleSearchStats();
 			} catch (error) {
 				handleError('searchStats', error);
+			}
+		}
+	);
+
+	// Register show search history panel
+	const showSearchHistoryDisposable = vscode.commands.registerCommand(
+		'cppseek.showSearchHistory',
+		async () => {
+			try {
+				if (!historyPanel) {
+					vscode.window.showWarningMessage('History panel not available');
+					return;
+				}
+				await historyPanel.show();
+			} catch (error) {
+				handleError('showSearchHistory', error);
+			}
+		}
+	);
+
+	// Register export search history
+	const exportSearchHistoryDisposable = vscode.commands.registerCommand(
+		'cppseek.exportSearchHistory',
+		async () => {
+			try {
+				if (!historyManager) {
+					vscode.window.showWarningMessage('History manager not available');
+					return;
+				}
+				const format = await vscode.window.showQuickPick(['markdown', 'json'], {
+					placeHolder: 'Select export format'
+				});
+				if (!format) return;
+				const content = await historyManager.exportHistory(format as any);
+				const doc = await vscode.workspace.openTextDocument({ content, language: format === 'json' ? 'json' : 'markdown' });
+				await vscode.window.showTextDocument(doc, { preview: true });
+			} catch (error) {
+				handleError('exportSearchHistory', error);
 			}
 		}
 	);
@@ -282,7 +330,9 @@ function registerCommands(context: vscode.ExtensionContext) {
 		navigateNextDisposable,
 		navigatePrevDisposable,
 		showNavigationHistoryDisposable,
-		jumpToLineDisposable
+		jumpToLineDisposable,
+		showSearchHistoryDisposable,
+		exportSearchHistoryDisposable
 	);
 }
 
@@ -340,7 +390,7 @@ async function handleSemanticSearch() {
 			let searchTime = 0;
 			const searchStartTime = Date.now();
 			
-			if (enhancedSearchService) {
+				if (enhancedSearchService) {
 				logMessage('Using EnhancedSemanticSearchService with ranking');
 				const searchOptions = {
 					topK: 10,
@@ -367,10 +417,10 @@ async function handleSemanticSearch() {
 				results = await vectorStorageService.searchSimilar(searchQuery, 5);
 			}
 			
-			searchTime = Date.now() - searchStartTime;
+				searchTime = Date.now() - searchStartTime;
 			progress.report({ increment: 100, message: 'Search completed' });
 			
-			// Display search results
+				// Display search results
 			if (results.length === 0) {
 				vscode.window.showInformationMessage(
 					`No results found for: "${searchQuery}". Try a different query or index more files.`
@@ -378,8 +428,21 @@ async function handleSemanticSearch() {
 				return;
 			}
 			
-			// Use new presentation system if available, otherwise fall back to markdown
-			if (searchResultsPanel && enhancedSearchService && 'finalScore' in results[0]) {
+				// Record search history (basic context)
+				try {
+					if (historyManager && 'finalScore' in results[0]) {
+						await historyManager.recordSearch(
+							searchQuery,
+							results as import('./services/searchResultRanker').RankedSearchResult[],
+							{ searchDuration: searchTime }
+						);
+					}
+				} catch (e) {
+					logMessage(`History record failed: ${e}`);
+				}
+
+				// Use new presentation system if available, otherwise fall back to markdown
+				if (searchResultsPanel && enhancedSearchService && 'finalScore' in results[0]) {
 				await searchResultsPanel.displayResults(
 					results as import('./services/searchResultRanker').RankedSearchResult[],
 					searchQuery,
