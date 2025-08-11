@@ -25,5 +25,6 @@
 	"typescript.preferences.quoteStyle": "single",
 	"eslint.validate": ["typescript"],
 	"editor.tabSize": 2,
-	"editor.insertSpaces": true
+	"editor.insertSpaces": true,
+	"terminal.integrated.defaultProfile.linux": "tcsh"
 }

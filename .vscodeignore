@@ -19,3 +19,7 @@ scripts/**
 .ai/**
 .cursor/**
 memory-bank/**
+onnxruntime-node/**
+sharp/**
+@xenova/transformers/**
+@chroma-core/default-embed/**

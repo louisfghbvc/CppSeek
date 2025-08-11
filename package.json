@@ -3,8 +3,10 @@
   "displayName": "CppSeek - Semantic Search",
   "description": "AI-powered semantic search for C/C++ codebases",
   "version": "0.0.1",
+  "publisher": "louisfghbvc",
+  "license": "MIT",
   "engines": {
-    "vscode": "^1.102.0"
+    "vscode": "^1.90.0"
   },
   "categories": [
     "Other",
@@ -437,7 +439,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/sqlite3": "^3.1.11",
-    "@types/vscode": "^1.102.0",
+    "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
     "@vscode/test-cli": "^0.0.11",

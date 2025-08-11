@@ -26,7 +26,10 @@ const extensionConfig = {
     // External native dependencies that should not be bundled
     'onnxruntime-node': 'commonjs onnxruntime-node',
     'sharp': 'commonjs sharp',
-    '@xenova/transformers': 'commonjs @xenova/transformers'
+    '@xenova/transformers': 'commonjs @xenova/transformers',
+    
+    // Handle problematic chromadb dependencies
+    '@chroma-core/default-embed': 'commonjs @chroma-core/default-embed'
   },
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
