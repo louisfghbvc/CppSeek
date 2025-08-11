@@ -180,6 +180,21 @@
           "default": true,
           "description": "Enable caching for better performance"
         },
+        "cppseek.modernVectorStorage.nimApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "NVIDIA NIM API Key for embeddings (leave empty to use NIM_API_KEY environment variable)"
+        },
+        "cppseek.modernVectorStorage.nimBaseUrl": {
+          "type": "string",
+          "default": "https://integrate.api.nvidia.com/v1",
+          "description": "NVIDIA NIM API base URL"
+        },
+        "cppseek.modernVectorStorage.nimModel": {
+          "type": "string",
+          "default": "nvidia/llama-3.2-nv-embedqa-1b-v2",
+          "description": "NVIDIA NIM embedding model to use"
+        },
         "cppseek.performance.maxMemoryUsage": {
           "type": "number",
           "default": 200,
