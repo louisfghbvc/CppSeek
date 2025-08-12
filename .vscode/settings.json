@@ -1,0 +1,30 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+	"files.exclude": {
+		"**/node_modules": true,
+		"**/out": true,
+		"**/dist": true,
+		"**/.git": true,
+		"**/.vscode-test": true
+	},
+	"search.exclude": {
+		"**/node_modules": true,
+		"**/out": true,
+		"**/dist": true,
+		"**/.vscode-test": true
+	},
+	// Turn off tsc task auto detection since we have the necessary tasks as npm scripts
+	"typescript.tsc.autoDetect": "off",
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"typescript.preferences.importModuleSpecifier": "relative",
+	"typescript.suggest.autoImports": true,
+	"typescript.preferences.quoteStyle": "single",
+	"eslint.validate": ["typescript"],
+	"editor.tabSize": 2,
+	"editor.insertSpaces": true,
+	"terminal.integrated.defaultProfile.linux": "tcsh"
+}

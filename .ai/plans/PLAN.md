@@ -42,8 +42,8 @@ CppSeek provides:
 #### 🔗 Embedding & Search
 - **Embedding Service**: Nvidia NIM (Nvidia Inference Microservices) with llama-3.2-nv-embedqa-1b-v2
 - **Deployment**: Local containerized inference service via NIM
-- **Vector Storage**: FAISS for local similarity search  
-- **Basic Search**: Cosine similarity matching with top-5 results
+- **Vector Storage**: LangChain + Chroma modern RAG architecture (**UPDATED**: moved from FAISS due to dependency issues)
+- **Basic Search**: Semantic similarity with document-based retrieval, top-K results
 
 #### 🎯 Phase 1 Deliverables
 - [ ] Extension loads and activates in VSCode
@@ -81,7 +81,34 @@ CppSeek provides:
 - [ ] Improved search accuracy and relevance
 - [ ] Production-ready extension for marketplace
 
+### 🚀 Architecture Evolution & Current Status
 
+**Strategy Update (2025-07-29)**: The project has evolved beyond the original phased approach to adopt a modern RAG (Retrieval-Augmented Generation) architecture that provides superior performance and maintainability.
+
+#### Current Implementation Status
+- ✅ **Phase 1 Foundation**: Completed (Tasks 1-10)
+  - VSCode extension scaffold and basic functionality
+  - File discovery, content reading, and text chunking
+  - Nvidia NIM integration for embeddings
+  - Basic search infrastructure
+
+- ✅ **Modern RAG Upgrade**: Completed (Tasks 11.1-11.3)  
+  - LangChain + Chroma vector storage system
+  - Document management with incremental updates
+  - Zero native dependencies architecture
+  - Production-ready modern stack
+
+#### Architecture Benefits Realized
+- **Zero Dependencies**: Pure JavaScript solution, no FAISS compilation issues
+- **Modern Ecosystem**: LangChain provides rich documentation and community support
+- **Scalability**: Chroma handles large-scale vector operations efficiently  
+- **Maintainability**: Standard RAG patterns enable future enhancements
+- **Integration**: Seamless Nvidia NIM embedding service integration
+
+#### Next Phase Focus
+- **Performance Validation**: Benchmark modern RAG implementation
+- **System Integration**: Complete migration from legacy components
+- **Enhanced Features**: Build upon modern architecture foundation
 
 ## Technical Architecture
 
@@ -90,10 +117,12 @@ CppSeek provides:
 |-----------|------------|---------|
 | Text Chunking | Fixed-size chunking (Phase 1) → clangd (Phase 2+) | Code segmentation |
 | Embeddings | Nvidia NIM (llama-3.2-nv-embedqa-1b-v2) | Code vectorization |
-| Vector Search | FAISS / Chroma | Similarity matching |
-| Vector Storage | SQLite | Local metadata storage |
-
+| Vector Search | **LangChain + Chroma** (modern RAG) | Document-based similarity matching |
+| Vector Storage | **Chroma** (with metadata) | Vector storage and retrieval |
+| Document Management | **LangChain Documents** | Structured code representation |
 | UI Framework | VSCode Extension API | User interface |
+
+**Architecture Update**: Adopted LangChain + Chroma modern RAG architecture for zero dependency issues and production-ready ecosystem.
 
 ### System Architecture
 ```mermaid
