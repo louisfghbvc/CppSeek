@@ -1,24 +1,28 @@
 # CppSeek - AI-Powered Semantic Search for C/C++
 
-CppSeek is a Visual Studio Code extension that brings intelligent semantic search capabilities to C and C++ codebases. Using advanced AI embeddings and vector similarity search, CppSeek helps developers quickly find relevant code segments based on natural language queries rather than exact text matches.
+CppSeek is a production-ready Visual Studio Code extension that brings intelligent semantic search capabilities to C and C++ codebases. Using advanced NVIDIA NIM AI embeddings and modern vector similarity search, CppSeek helps developers quickly find relevant code segments based on natural language queries rather than exact text matches.
+
+**🎯 Version 0.0.1 - Production Ready** | **🤖 Powered by NVIDIA NIM** | **🗄️ LangChain + Chroma Architecture**
 
 ## 🚀 Features
 
-### Current Features (Foundation Release)
+### ✅ Core Features (Production Ready)
 
-- **🎯 Semantic Search Command**: Search your codebase using natural language queries
-- **📁 Workspace Indexing**: Intelligent scanning and indexing of C/C++ files
-- **⌨️ Keyboard Shortcuts**: Quick access with `Ctrl+Shift+S` (Cmd+Shift+S on Mac)
-- **📊 Progress Tracking**: Real-time indexing progress in the status bar
-- **⚙️ Flexible Configuration**: Comprehensive settings for search behavior and performance
-- **🔧 Output Logging**: Detailed logging channel for debugging and monitoring
+- **🎯 Semantic Search Engine**: AI-powered natural language search with NVIDIA NIM embeddings
+- **🤖 NVIDIA NIM Integration**: llama-3.2-nv-embedqa-1b-v2 embeddings for superior accuracy
+- **🗄️ Modern Vector Storage**: LangChain + Chroma for efficient similarity search
+- **📁 Intelligent Workspace Indexing**: Recursive C/C++ file discovery with smart patterns
+- **📄 Advanced Code Processing**: Context-aware chunking with boundary detection
+- **🎯 Multi-factor Ranking**: AI-powered relevance scoring with user behavior tracking
 
-### Coming Soon (Core Implementation)
+### 🎨 User Interface & Experience
 
-- **🤖 Nvidia NIM Integration**: Powered by llama-3.2-nv-embedqa-1b-v2 embeddings
-- **🗄️ Vector Database**: Efficient similarity search using FAISS
-- **📄 Smart Code Parsing**: Context-aware chunking and preprocessing
-- **🎯 Intelligent Ranking**: AI-powered result relevance scoring
+- **⌨️ Rich Keyboard Shortcuts**: `Ctrl+Shift+S` and 11 additional navigation commands
+- **🖥️ Advanced Search Results UI**: Webview with syntax highlighting and navigation
+- **📚 Search History & Bookmarks**: Persistent history with export functionality
+- **📊 Real-time Progress Tracking**: Live status updates during indexing
+- **⚙️ Comprehensive Configuration**: 40+ settings for all components
+- **🔧 Professional Logging**: Detailed debugging and monitoring channels
 
 ## 📦 Installation
 
@@ -67,6 +71,14 @@ npx vsce package
 | `CppSeek: Index Workspace` | - | Index all C/C++ files in the workspace |
 | `CppSeek: Clear Index` | - | Clear the current search index |
 | `CppSeek: Show Settings` | - | Open CppSeek configuration settings |
+| `CppSeek: Search Statistics` | - | View search performance metrics |
+| `CppSeek: Show Search History` | `Ctrl+Alt+H` | View and manage search history |
+| `CppSeek: Export Search History` | - | Export search history to file |
+| `CppSeek: Clear Search Cache` | - | Clear search cache and temporary data |
+| `CppSeek: Navigate to Next Result` | `Ctrl+Shift+N` | Navigate to next search result |
+| `CppSeek: Navigate to Previous Result` | `Ctrl+Shift+P` | Navigate to previous search result |
+| `CppSeek: Show Navigation History` | `Ctrl+Shift+H` | View navigation history |
+| `CppSeek: Jump to Line` | `Ctrl+G` | Jump to specific line in search results |
 
 ### Example Queries
 
@@ -75,6 +87,10 @@ npx vsce package
 "Find functions that handle error conditions"
 "Show me the initialization code"
 "Where are the data structures defined?"
+"How is the database connection managed?"
+"Find all functions that use smart pointers"
+"Show me the threading implementation"
+"Where are the network protocols defined?"
 ```
 
 ## ⚙️ Configuration
@@ -151,19 +167,31 @@ npm run test:coverage  # Test coverage report
 
 ```
 src/
-├── extension.ts        # Main extension entry point
-├── test/
-│   ├── setup.ts       # Jest test configuration
-│   └── suite/
-│       └── extension.test.ts  # Extension tests
-└── [future modules]    # Semantic search implementation
+├── extension.ts              # Main extension entry point
+├── services/                 # Core service implementations
+│   ├── SemanticSearchService.ts    # Main search orchestrator
+│   ├── NIMEmbeddingService.ts      # NVIDIA NIM integration
+│   ├── FileDiscoveryService.ts     # Workspace file scanning
+│   ├── FileContentReader.ts        # File content processing
+│   ├── TextChunker.ts              # Smart text chunking
+│   ├── ChunkOverlapManager.ts      # Overlap logic
+│   └── SearchResultsRanking.ts     # Result ranking system
+├── ui/                       # User interface components
+│   ├── SearchResultsPanel.ts      # Webview UI
+│   └── NavigationManager.ts       # Result navigation
+├── storage/                  # Data persistence
+│   ├── ChromaVectorStore.ts        # Vector database
+│   └── SearchHistoryManager.ts     # History tracking
+└── test/                     # Comprehensive test suite
+    ├── setup.ts              # Jest configuration
+    └── suite/                # Test implementations
 
-.ai/           # Task Magic system
-├── tasks/            # Individual task files
-├── plans/            # Project requirements
-└── memory/           # Completed task archive
+.ai/           # Task Magic system (project management)
+├── tasks/            # Completed development tasks
+├── plans/            # Project requirements and PRDs
+└── memory/           # Development history archive
 
-memory-bank/          # Memory Bank system
+memory-bank/          # Memory Bank system (context)
 ├── activeContext.md  # Current development state
 ├── progress.md       # Project progress tracking
 └── [other context]   # Technical documentation
@@ -173,9 +201,12 @@ memory-bank/          # Memory Bank system
 
 ### Runtime Dependencies
 
+- **@langchain/community & @langchain/core**: Modern RAG architecture framework
+- **chromadb**: Vector database for similarity search
 - **@xenova/transformers**: AI model tokenization (Llama-compatible)
+- **openai**: NVIDIA NIM API integration
 - **sqlite3**: Local database for metadata storage
-- **faiss-node**: Vector similarity search engine
+- **dotenv**: Environment variable management
 
 ### Development Dependencies
 
@@ -186,9 +217,9 @@ memory-bank/          # Memory Bank system
 
 ## 🐛 Known Issues
 
-- Extension packaging requires non-template README (resolved in this version)
-- Native dependencies may require compilation on first install
-- FAISS integration pending for semantic search functionality
+- Native dependencies (sqlite3, chromadb) may require compilation on first install
+- Large codebases may require increased memory allocation for indexing
+- Initial workspace indexing can take several minutes for very large projects
 
 ## 📈 Roadmap
 
@@ -198,21 +229,32 @@ memory-bank/          # Memory Bank system
 - [x] Testing framework with Jest
 - [x] Command palette integration
 
-### Phase 2: Core Implementation (In Progress)
-- [ ] Database schema and vector storage
-- [ ] Nvidia NIM service integration
-- [ ] Code parsing and chunking algorithms
-- [ ] Semantic search and ranking
+### Phase 2: Core Implementation ✅ Complete
+- [x] Modern RAG architecture (LangChain + Chroma)
+- [x] NVIDIA NIM API integration
+- [x] Advanced code parsing and chunking
+- [x] Multi-factor search ranking system
+- [x] Rich UI with syntax highlighting
+- [x] Search history and bookmarking
 
-### Phase 3: Advanced Features (Planned)
-- [ ] Cross-reference analysis
-- [ ] Code similarity detection
-- [ ] Integration with IDE features
-- [ ] Performance optimization
+### Phase 3: Advanced Features ✅ Complete
+- [x] User behavior tracking
+- [x] Performance optimization and caching
+- [x] Comprehensive configuration system
+- [x] Production-ready error handling
+- [x] Navigation and result management
+- [x] Export and statistics features
+
+### Phase 4: Future Enhancements (Planned)
+- [ ] Cross-reference analysis and dependency mapping
+- [ ] Advanced code similarity detection
+- [ ] Integration with debugging and refactoring tools
+- [ ] Multi-language support expansion
+- [ ] Cloud-based indexing options
 
 ## 📄 License
 
-[License information to be added]
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🤝 Contributing
 
