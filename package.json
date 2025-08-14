@@ -2,9 +2,13 @@
   "name": "cppseek-semantic-search",
   "displayName": "CppSeek - Semantic Search",
   "description": "AI-powered semantic search for C/C++ codebases",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "louisfghbvc",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/louisfghbvc/CppSeek"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -58,6 +62,21 @@
       {
         "command": "cppseek.clearSearchCache",
         "title": "CppSeek: Clear Search Cache",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.configurationWizard",
+        "title": "CppSeek: Configuration Wizard",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.testConfiguration",
+        "title": "CppSeek: Test Configuration",
+        "category": "CppSeek"
+      },
+      {
+        "command": "cppseek.showDiagnostic",
+        "title": "CppSeek: Show Diagnostic",
         "category": "CppSeek"
       },
       {

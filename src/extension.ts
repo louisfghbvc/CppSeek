@@ -15,6 +15,8 @@ import { SearchHistoryManager } from './services/history/searchHistoryManager';
 import { ResultNavigationHandler } from './ui/resultNavigationHandler';
 import { createNIMServiceFromEnv } from './services/nimEmbeddingService';
 import { HistoryPanel } from './ui/historyPanel';
+import { ConfigurationWizard } from './commands/configurationWizard';
+import { ConfigurationTest } from './commands/configurationTest';
 
 // Test imports for semantic search dependencies
 // Note: Runtime execution may fail due to native bindings, but TypeScript compilation should work
@@ -74,6 +76,10 @@ export function activate(context: vscode.ExtensionContext) {
 	fileContentReader = new FileContentReader(outputChannel);
 	vectorStorageService = new VectorStorageService();
 	
+	// Check configuration before initialization
+	let configurationValid = false;
+	let showConfigWizard = false;
+	
 	// Initialize semantic search service (async initialization will be handled when first used)
 	try {
 		const nimService = createNIMServiceFromEnv();
@@ -98,8 +104,17 @@ export function activate(context: vscode.ExtensionContext) {
 		historyPanel = new HistoryPanel(context, historyManager);
 		logMessage('UI components initialized successfully');
 		
+		configurationValid = true;
+		
 	} catch (error) {
 		logMessage(`Warning: SemanticSearchService initialization failed: ${error}`);
+		
+		// Check if this is a configuration issue
+		if (error instanceof Error && error.message.includes('NIM_API_KEY')) {
+			showConfigWizard = true;
+			logMessage('Configuration wizard will be shown due to missing API key');
+		}
+		
 		// Fall back to direct vector storage service if needed
 	}
 	
@@ -112,24 +127,52 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register all commands
 	registerCommands(context);
 	
-	  // Show welcome message if this is first activation
-  const hasShownWelcome = context.globalState.get('hasShownWelcome', false);
-  
-  if (!hasShownWelcome) {
-    vscode.window.showInformationMessage(
-      'CppSeek: AI-powered semantic search for C/C++ codebases is now active!',
-      'Open Settings',
-      'Index Workspace'
-    ).then(selection => {
-      if (selection === 'Open Settings') {
-        vscode.commands.executeCommand('cppseek.showSettings');
-      } else if (selection === 'Index Workspace') {
-        vscode.commands.executeCommand('cppseek.indexWorkspace');
-      }
-    });
-    
-    context.globalState.update('hasShownWelcome', true);
-  }
+	// Show welcome message or configuration wizard
+	const hasShownWelcome = context.globalState.get('hasShownWelcome', false);
+	
+	if (showConfigWizard && !hasShownWelcome) {
+		// Show configuration wizard for first-time users
+		setTimeout(async () => {
+			const configWizard = new ConfigurationWizard();
+			const configSuccess = await configWizard.launchWizard();
+			
+			if (configSuccess) {
+				logMessage('Configuration wizard completed successfully');
+				// Attempt to reinitialize services after configuration
+				try {
+					const nimService = createNIMServiceFromEnv();
+					semanticSearchService = new SemanticSearchService(vectorStorageService, nimService);
+					enhancedSearchService = createEnhancedSemanticSearchService(vectorStorageService, nimService);
+					logMessage('Services reinitialized after configuration');
+				} catch (reinitError) {
+					logMessage(`Failed to reinitialize services: ${reinitError}`);
+				}
+			}
+		}, 1000); // Delay to ensure extension is fully loaded
+		
+		context.globalState.update('hasShownWelcome', true);
+	} else if (!hasShownWelcome) {
+		// Show normal welcome message if configuration is valid
+		vscode.window.showInformationMessage(
+			'CppSeek: AI-powered semantic search for C/C++ codebases is now active!',
+			'Open Settings',
+			'Index Workspace'
+		).then(selection => {
+			if (selection === 'Open Settings') {
+				vscode.commands.executeCommand('cppseek.showSettings');
+			} else if (selection === 'Index Workspace') {
+				vscode.commands.executeCommand('cppseek.indexWorkspace');
+			}
+		});
+		
+		context.globalState.update('hasShownWelcome', true);
+	} else if (showConfigWizard) {
+		// Show configuration wizard for returning users with config issues
+		setTimeout(async () => {
+			const configWizard = new ConfigurationWizard();
+			await configWizard.launchWizard();
+		}, 1000);
+	}
 }
 
 function registerCommands(context: vscode.ExtensionContext) {
@@ -243,6 +286,68 @@ function registerCommands(context: vscode.ExtensionContext) {
 		}
 	);
 
+	// Register configuration wizard command
+	const configWizardDisposable = vscode.commands.registerCommand(
+		'cppseek.configurationWizard',
+		async () => {
+			try {
+				const configWizard = new ConfigurationWizard();
+				const configSuccess = await configWizard.launchWizard();
+				
+				if (configSuccess) {
+					logMessage('Configuration wizard completed successfully');
+					// Attempt to reinitialize services after configuration
+					try {
+						const nimService = createNIMServiceFromEnv();
+						semanticSearchService = new SemanticSearchService(vectorStorageService, nimService);
+						enhancedSearchService = createEnhancedSemanticSearchService(vectorStorageService, nimService);
+						logMessage('Services reinitialized after configuration');
+						
+						vscode.window.showInformationMessage(
+							'✅ 配置完成！CppSeek 已準備就緒。',
+							'開始索引工作區域'
+						).then(choice => {
+							if (choice === '開始索引工作區域') {
+								vscode.commands.executeCommand('cppseek.indexWorkspace');
+							}
+						});
+					} catch (reinitError) {
+						logMessage(`Failed to reinitialize services: ${reinitError}`);
+						vscode.window.showErrorMessage(`重新初始化服務失敗: ${reinitError}`);
+					}
+				}
+			} catch (error) {
+				handleError('configurationWizard', error);
+			}
+		}
+	);
+
+	// Register configuration test command
+	const configTestDisposable = vscode.commands.registerCommand(
+		'cppseek.testConfiguration',
+		async () => {
+			try {
+				const configTest = new ConfigurationTest();
+				await configTest.testConfiguration();
+			} catch (error) {
+				handleError('testConfiguration', error);
+			}
+		}
+	);
+
+	// Register configuration diagnostic command
+	const configDiagnosticDisposable = vscode.commands.registerCommand(
+		'cppseek.showDiagnostic',
+		async () => {
+			try {
+				const configTest = new ConfigurationTest();
+				await configTest.showDiagnostic();
+			} catch (error) {
+				handleError('showDiagnostic', error);
+			}
+		}
+	);
+
 	// Register navigation commands
 	const navigateNextDisposable = vscode.commands.registerCommand(
 		'cppseek.navigateToNextResult',
@@ -327,6 +432,9 @@ function registerCommands(context: vscode.ExtensionContext) {
 		showSettingsDisposable,
 		searchStatsDisposable,
 		clearCacheDisposable,
+		configWizardDisposable,
+		configTestDisposable,
+		configDiagnosticDisposable,
 		navigateNextDisposable,
 		navigatePrevDisposable,
 		showNavigationHistoryDisposable,

@@ -60,8 +60,23 @@ npx vsce package
 ### Getting Started
 
 1. **Open a C/C++ workspace** - CppSeek activates automatically when you open C/C++ files
-2. **Index your workspace** - Use `CppSeek: Index Workspace` command or the welcome prompt
-3. **Start searching** - Use `Ctrl+Shift+S` or the `CppSeek: Semantic Search` command
+2. **Configure API key** - CppSeek will automatically show the configuration wizard on first use
+3. **Index your workspace** - Use `CppSeek: Index Workspace` command or the welcome prompt
+4. **Start searching** - Use `Ctrl+Shift+S` or the `CppSeek: Semantic Search` command
+
+### First-Time Setup
+
+On first launch, CppSeek will guide you through the setup process:
+
+1. **Configuration Wizard** - Automatically appears to help you set up your NVIDIA NIM API key
+2. **Multiple Configuration Options** - Choose from VS Code settings, environment variables, or .env files
+3. **Configuration Testing** - Verify your setup works correctly
+4. **Ready to Use** - Start indexing and searching your codebase
+
+**Manual Setup Commands:**
+- `CppSeek: Configuration Wizard` - Set up or change your API configuration
+- `CppSeek: Test Configuration` - Verify your current configuration
+- `CppSeek: Show Diagnostic` - Quick diagnostic check
 
 ### Available Commands
 
@@ -70,6 +85,9 @@ npx vsce package
 | `CppSeek: Semantic Search` | `Ctrl+Shift+S` | Start a semantic search query |
 | `CppSeek: Index Workspace` | - | Index all C/C++ files in the workspace |
 | `CppSeek: Clear Index` | - | Clear the current search index |
+| `CppSeek: Configuration Wizard` | - | Set up or change API configuration |
+| `CppSeek: Test Configuration` | - | Test current configuration |
+| `CppSeek: Show Diagnostic` | - | Show configuration diagnostic |
 | `CppSeek: Show Settings` | - | Open CppSeek configuration settings |
 | `CppSeek: Search Statistics` | - | View search performance metrics |
 | `CppSeek: Show Search History` | `Ctrl+Alt+H` | View and manage search history |
@@ -254,7 +272,7 @@ memory-bank/          # Memory Bank system (context)
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see LICENSE file for details.
 
 ## 🤝 Contributing
 

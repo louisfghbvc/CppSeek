@@ -19,16 +19,36 @@ code --install-extension cppseek-semantic-search-0.0.1.vsix
 
 ## 🔑 設定 NVIDIA API 金鑰
 
-### 推薦方式: VS Code 設定
-1. 安裝完成後，按 `Ctrl+,` (或 `Cmd+,`) 開啟設定
-2. 搜尋 "cppseek nim"
-3. 在 **"CppSeek › Modern Vector Storage: Nim Api Key"** 中填入你的 NVIDIA API 金鑰
+CppSeek 提供多種設定 API 金鑰的方式，會依以下優先級順序載入：
 
-### 替代方式: 環境變數
+### 方式 1: 自動設定精靈 ⭐ 推薦
+第一次啟動 CppSeek 時會自動顯示設定精靈，引導你完成配置：
+
+1. 安裝並重新載入 VS Code
+2. 自動出現設定精靈對話框
+3. 按照指示選擇設定方式並輸入 API 金鑰
+
+**手動啟動設定精靈:**
+- 按 `Ctrl+Shift+P` → 輸入 "CppSeek: Configuration Wizard"
+
+### 方式 2: VS Code 設定 (推薦)
+1. 按 `Ctrl+,` (或 `Cmd+,`) 開啟設定
+2. 搜尋 "cppseek nim"
+3. 在 **"Cppseek › Nim: Api Key"** 中填入你的 NVIDIA API 金鑰
+
+### 方式 3: 環境變數
 ```bash
 export NIM_API_KEY="your-nvidia-api-key-here"
 code .
 ```
+
+### 方式 4: .env 檔案
+在專案根目錄建立 `.env` 檔案：
+```bash
+NIM_API_KEY=your-nvidia-api-key-here
+```
+
+詳細配置說明請參考: [環境變數配置指南](docs/environment-setup.md)
 
 ## 🚀 使用方式
 
